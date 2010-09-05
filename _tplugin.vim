@@ -1,1 +1,1 @@
-TPluginBefore tmru_vim[\/].+?\.vim$ @tlib_vim
+TPluginBefore \<tmru_vim[\/]autoload[\/] TPlugin tlib_vim
