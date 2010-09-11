@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2010-09-10.
-" @Revision:    291
+" @Last Change: 2010-09-11.
+" @Revision:    296
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -213,15 +213,26 @@ endf
 function! s:RemoveItem(world, selected) "{{{3
     let mru = s:MruRetrieve()
     " TLogVAR a:selected
+    let idx = -1
     for filename in a:selected
         let fidx = index(mru, filename)
+        if idx < 0
+            let idx = fidx
+        endif
         " TLogVAR filename, fidx
         if fidx >= 0
             call remove(mru, fidx)
         endif
     endfor
     call s:MruStore(mru)
+    call a:world.ResetSelected()
     let a:world.base = copy(mru)
+    if idx > len(mru)
+        let a:world.idx = len(mru)
+    elseif idx >= 0
+        let a:world.idx = idx
+    endif
+    TLogVAR a:world.idx
     let a:world.state = 'display'
     return a:world
 endf
