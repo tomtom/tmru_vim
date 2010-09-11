@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2010-01-03.
-" @Revision:    277
+" @Last Change: 2010-09-10.
+" @Revision:    291
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -14,7 +14,7 @@ if !exists('loaded_tlib') || loaded_tlib < 28
     echoerr "tlib >= 0.28 is required"
     finish
 endif
-let loaded_tmru = 8
+let loaded_tmru = 9
 
 if !exists("g:tmruSize")
     " The number of recently edited files that are registered.
@@ -65,11 +65,16 @@ if !exists("g:tmru_ignorecase")
     let g:tmru_ignorecase = !has('fname_case') "{{{2
 endif
 
+function! s:SNR()
+    return matchstr(expand('<sfile>'), '<SNR>\d\+_\zeSNR$')
+endf
+
 if !exists('g:tmru_world') "{{{2
     let g:tmru_world = {
                 \ 'type': 'm',
                 \ 'key_handlers': [
                 \ {'key': 3,  'agent': 'tlib#agent#CopyItems',        'key_name': '<c-c>', 'help': 'Copy file name(s)'},
+                \ {'key': "\<del>", 'agent': s:SNR() .'RemoveItem',   'key_name': '<del>', 'help': 'Remove file name(s)'},
                 \ {'key': 9,  'agent': 'tlib#agent#ShowInfo',         'key_name': '<c-i>', 'help': 'Show info'},
                 \ {'key': 19, 'agent': 'tlib#agent#EditFileInSplit',  'key_name': '<c-s>', 'help': 'Edit files (split)'},
                 \ {'key': 22, 'agent': 'tlib#agent#EditFileInVSplit', 'key_name': '<c-v>', 'help': 'Edit files (vertical split)'},
@@ -129,10 +134,6 @@ function! s:MruRegister(fname)
     endif
     call insert(tmru, a:fname)
     call s:MruStore(tmru)
-endf
-
-function! s:SNR()
-    return matchstr(expand('<sfile>'), '<SNR>\d\+_\zeSNR$')
 endf
 
 " Return 0 if the file isn't readable/doesn't exist.
@@ -209,6 +210,23 @@ function! s:AutoMRU(filename) "{{{3
 endf
 
 
+function! s:RemoveItem(world, selected) "{{{3
+    let mru = s:MruRetrieve()
+    " TLogVAR a:selected
+    for filename in a:selected
+        let fidx = index(mru, filename)
+        " TLogVAR filename, fidx
+        if fidx >= 0
+            call remove(mru, fidx)
+        endif
+    endfor
+    call s:MruStore(mru)
+    let a:world.base = copy(mru)
+    let a:world.state = 'display'
+    return a:world
+endf
+
+
 augroup tmru
     au!
     au VimEnter * call s:BuildMenu(1)
@@ -259,4 +277,7 @@ already registered.
 
 0.8
 - s:EditMRU(): Save tmru list only if it was changed.
+
+0.9
+- <del> ... Remove item(s)
 
