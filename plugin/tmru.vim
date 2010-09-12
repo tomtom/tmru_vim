@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2010-09-11.
-" @Revision:    296
+" @Last Change: 2010-09-12.
+" @Revision:    297
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -239,9 +239,13 @@ endf
 
 
 augroup tmru
-    au!
-    au VimEnter * call s:BuildMenu(1)
-    exec 'au '. g:tmruEvents .' * call s:AutoMRU(expand("<afile>:p"))'
+    autocmd!
+    if has('vim_starting')
+        autocmd VimEnter * call s:BuildMenu(1)
+    else
+        call s:BuildMenu(1)
+    endif
+    exec 'autocmd '. g:tmruEvents .' * call s:AutoMRU(expand("<afile>:p"))'
 augroup END
 
 " Display the MRU list.
