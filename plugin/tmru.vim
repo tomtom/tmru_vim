@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2010-09-12.
-" @Revision:    297
+" @Last Change: 2010-10-23.
+" @Revision:    309
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -44,6 +44,7 @@ if !exists("g:tmru_file")
     endif
 endif
 
+
 " Don't change the value of this variable.
 if !exists("g:TMRU")
     if empty(g:tmru_file)
@@ -53,6 +54,7 @@ if !exists("g:TMRU")
     endif
 endif
 
+
 if !exists("g:tmruExclude") "{{{2
     " Ignore files matching this regexp.
     " :read: let g:tmruExclude = '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$' "{{{2
@@ -60,20 +62,24 @@ if !exists("g:tmruExclude") "{{{2
                 \ substitute(escape(&suffixes, '~.*$^'), ',', '$\\|', 'g') .'$'
 endif
 
+
 if !exists("g:tmru_ignorecase")
     " If true, ignore case when comparing filenames.
     let g:tmru_ignorecase = !has('fname_case') "{{{2
 endif
 
+
 function! s:SNR()
     return matchstr(expand('<sfile>'), '<SNR>\d\+_\zeSNR$')
 endf
+
 
 if !exists('g:tmru_world') "{{{2
     let g:tmru_world = {
                 \ 'type': 'm',
                 \ 'key_handlers': [
                 \ {'key': 3,  'agent': 'tlib#agent#CopyItems',        'key_name': '<c-c>', 'help': 'Copy file name(s)'},
+                \ {'key': 6,  'agent': s:SNR() .'CheckFilenames',     'key_name': '<c-f>', 'help': 'Check file name(s)'},
                 \ {'key': "\<del>", 'agent': s:SNR() .'RemoveItem',   'key_name': '<del>', 'help': 'Remove file name(s)'},
                 \ {'key': 9,  'agent': 'tlib#agent#ShowInfo',         'key_name': '<c-i>', 'help': 'Show info'},
                 \ {'key': 19, 'agent': 'tlib#agent#EditFileInSplit',  'key_name': '<c-s>', 'help': 'Edit files (split)'},
@@ -104,9 +110,11 @@ function! s:BuildMenu(initial) "{{{3
     endif
 endf
 
+
 function! s:MruRetrieve()
     return split(g:TMRU, '\n')
 endf
+
 
 function! s:MruStore(mru)
     let g:TMRU = join(a:mru, "\n")
@@ -115,6 +123,7 @@ function! s:MruStore(mru)
     call s:BuildMenu(0)
     call tlib#cache#Save(g:tmru_file, {'tmru': g:TMRU})
 endf
+
 
 function! s:MruRegister(fname)
     " TLogVAR a:fname
@@ -135,6 +144,7 @@ function! s:MruRegister(fname)
     call insert(tmru, a:fname)
     call s:MruStore(tmru)
 endf
+
 
 " Return 0 if the file isn't readable/doesn't exist.
 " Otherwise return 1.
@@ -165,6 +175,7 @@ function! s:Edit(filename) "{{{3
     return 0
 endf
 
+
 function! s:SelectMRU()
     " TLogDBG "SelectMRU#1"
     let tmru  = s:MruRetrieve()
@@ -194,6 +205,7 @@ function! s:SelectMRU()
     return 0
 endf
 
+
 function! s:EditMRU()
     let tmru = s:MruRetrieve()
     let tmru1 = tlib#input#EditList('Edit MRU', tmru)
@@ -201,6 +213,7 @@ function! s:EditMRU()
         call s:MruStore(tmru)
     endif
 endf
+
 
 function! s:AutoMRU(filename) "{{{3
     " if &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != '' && filereadable(fnamemodify(a:filename, ":t"))
@@ -232,8 +245,31 @@ function! s:RemoveItem(world, selected) "{{{3
     elseif idx >= 0
         let a:world.idx = idx
     endif
-    TLogVAR a:world.idx
+    " TLogVAR a:world.idx
     let a:world.state = 'display'
+    return a:world
+endf
+
+
+function! s:CheckFilenames(world, selected) "{{{3
+    let mru = s:MruRetrieve()
+    let idx = len(mru) - 1
+    let save = 0
+    while idx > 0
+        let file = mru[idx]
+        if !filereadable(file)
+            " TLogVAR file
+            call remove(mru, idx)
+            let save += 1
+        endif
+        let idx -= 1
+    endwh
+    if save > 0
+        call s:MruStore(mru)
+        echom "TMRU: Removed" save "unreadable files from mru list"
+    endif
+    let world.base = copy(tmru)
+    let a:world.state = 'reset'
     return a:world
 endf
 
