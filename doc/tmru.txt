@@ -1,7 +1,6 @@
 *tmru.txt*  Most Recently Used Files
             Author: Tom Link, micathom at gmail com
 
-
 This plugin provides a simple most recently files facility.
 
 It was originally rather a by-product of tlib (vimscript #1863) and uses 

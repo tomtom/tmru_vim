@@ -1,6 +1,3 @@
-*tmru.txt*  Most Recently Used Files
-
-
 This plugin provides a simple most recently files facility.
 
 It was originally rather a by-product of tlib (vimscript #1863) and uses 
@@ -19,7 +16,7 @@ By default tmru matches the search pattern on the full filename. If
 you want to match on the basename, add the following to 
 ~/vimfiles/after/plugin/tmru.vim: >
 
-    let g:tmru_world.filter_format = 'fnamemodify(%%s, ":t")'
+    let g:tmru_world.filter_format = 'fnamemodify(%s, ":t")'
 
 
 -----------------------------------------------------------------------
