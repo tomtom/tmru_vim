@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-03-17.
-" @Revision:    311
+" @Last Change: 2011-03-22.
+" @Revision:    317
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -210,7 +210,7 @@ function! s:EditMRU()
     let tmru = s:MruRetrieve()
     let tmru1 = tlib#input#EditList('Edit MRU', tmru)
     if tmru != tmru1
-        call s:MruStore(tmru)
+        call s:MruStore(tmru1)
     endif
 endf
 
