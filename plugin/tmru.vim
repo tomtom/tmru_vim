@@ -58,7 +58,12 @@ endif
 if !exists("g:tmruExclude") "{{{2
     " Ignore files matching this regexp.
     " :read: let g:tmruExclude = '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$' "{{{2
-    let g:tmruExclude = '/te\?mp/\|/\(vimfiles\|\.vim\)/\(doc\|cache\)/\|__.\{-}__$\|'.
+    if exists('+shellslash')
+        let PS = &shellslash ? '/' : '\\'
+    else
+        let PS = "/"
+    endif
+    let g:tmruExclude = PS.'[Tt]e\?mp'.PS.'\|'.PS.'\(vimfiles\|\.vim\)'.PS.'\(doc\|cache\)'.PS.'\|__.\{-}__$\|'.
                 \ substitute(escape(&suffixes, '~.*$^'), ',', '$\\|', 'g') .'$'
 endif
 
