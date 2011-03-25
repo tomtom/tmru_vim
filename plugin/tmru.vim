@@ -112,7 +112,11 @@ endf
 
 
 function! s:MruRetrieve()
-    return split(g:TMRU, '\n')
+    let r = split(g:TMRU, '\n')
+    if exists('+shellslash')
+        let r = map(r, 's:CanonicalizeFilename(v:val)')
+    endif
+    return r
 endf
 
 
@@ -124,24 +128,38 @@ function! s:MruStore(mru)
     call tlib#cache#Save(g:tmru_file, {'tmru': g:TMRU})
 endf
 
+" Canonicalize filename when using &shellslash (Windows)
+function! s:CanonicalizeFilename(fname)
+    if ! exists('+shellslash')
+        return a:fname
+    endif
+    if &shellslash
+        let fname = fnamemodify(a:fname, ':gs?\\?/?')
+    else
+        let fname = fnamemodify(a:fname, ':gs?/?\\?')
+    endif
+    return fname
+endfunction
 
 function! s:MruRegister(fname)
     " TLogVAR a:fname
-    if g:tmruExclude != '' && a:fname =~ g:tmruExclude
+    let fname = s:CanonicalizeFilename(a:fname)
+    if g:tmruExclude != '' && fname =~ g:tmruExclude
+        if &verbose | echom "tmru: ignore file" fname | end
         return
     endif
     if exists('b:tmruExclude') && b:tmruExclude
         return
     endif
     let tmru = s:MruRetrieve()
-    let imru = index(tmru, a:fname, 0, g:tmru_ignorecase)
+    let imru = index(tmru, fname, 0, g:tmru_ignorecase)
     if imru == -1 && len(tmru) >= g:tmruSize
         let imru = g:tmruSize - 1
     endif
     if imru != -1
         call remove(tmru, imru)
     endif
-    call insert(tmru, a:fname)
+    call insert(tmru, fname)
     call s:MruStore(tmru)
 endf
 
@@ -149,17 +167,18 @@ endf
 " Return 0 if the file isn't readable/doesn't exist.
 " Otherwise return 1.
 function! s:Edit(filename) "{{{3
-    if a:filename == expand('%:p')
+    let filename = s:CanonicalizeFilename(a:filename)
+    if filename == expand('%:p')
         return 1
     else
-        let bn = bufnr(a:filename)
+        let bn = bufnr(filename)
         " TLogVAR bn
         if bn != -1 && buflisted(bn)
             exec 'buffer '. bn
             return 1
-        elseif filereadable(a:filename)
+        elseif filereadable(filename)
             try
-                let file = tlib#arg#Ex(a:filename)
+                let file = tlib#arg#Ex(filename)
                 " TLogVAR file
                 exec 'edit '. file
             catch
@@ -169,7 +188,10 @@ function! s:Edit(filename) "{{{3
             endtry
             return 1
         else
-            echom "TMRU: File not readable: ". a:filename
+            echom "TMRU: File not readable: " . filename
+            if filename != a:filename
+                echom "TMRU: original filename: " . a:filename
+            endif
         endif
     endif
     return 0
@@ -252,6 +274,7 @@ endf
 
 
 function! s:CheckFilenames(world, selected) "{{{3
+    " TODO: remove dupes?!
     let mru = s:MruRetrieve()
     let idx = len(mru) - 1
     let save = 0
