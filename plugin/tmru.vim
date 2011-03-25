@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-03-22.
-" @Revision:    317
+" @Last Change: 2011-03-25.
+" @Revision:    318
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -59,12 +59,13 @@ if !exists("g:tmruExclude") "{{{2
     " Ignore files matching this regexp.
     " :read: let g:tmruExclude = '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$' "{{{2
     if exists('+shellslash')
-        let PS = &shellslash ? '/' : '\\'
+        let s:PS = &shellslash ? '/' : '\\'
     else
-        let PS = "/"
+        let s:PS = "/"
     endif
-    let g:tmruExclude = PS.'[Tt]e\?mp'.PS.'\|'.PS.'\(vimfiles\|\.vim\)'.PS.'\(doc\|cache\)'.PS.'\|__.\{-}__$\|'.
+    let g:tmruExclude = s:PS.'[Tt]e\?mp'.s:PS.'\|'.s:PS.'\(vimfiles\|\.vim\)'.s:PS.'\(doc\|cache\)'.s:PS.'\|__.\{-}__$\|'.
                 \ substitute(escape(&suffixes, '~.*$^'), ',', '$\\|', 'g') .'$'
+    unlet s:PS
 endif
 
 
