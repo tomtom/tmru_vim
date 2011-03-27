@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-03-25.
-" @Revision:    318
+" @Last Change: 2011-03-27.
+" @Revision:    320
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -63,7 +63,11 @@ if !exists("g:tmruExclude") "{{{2
     else
         let s:PS = "/"
     endif
-    let g:tmruExclude = s:PS.'[Tt]e\?mp'.s:PS.'\|'.s:PS.'\(vimfiles\|\.vim\)'.s:PS.'\(doc\|cache\)'.s:PS.'\|__.\{-}__$\|'.
+    let g:tmruExclude = s:PS . '[Tt]e\?mp' . s:PS
+                \ . '\|' . s:PS . '\(vimfiles\|\.vim\)' . s:PS . '\(doc\|cache\)' . s:PS
+                \ . '\|\.tmp$'
+                \ . '\|'. s:PS .'COMMIT_EDITMSG$'
+                \ . '\|__.\{-}__$\|'.
                 \ substitute(escape(&suffixes, '~.*$^'), ',', '$\\|', 'g') .'$'
     unlet s:PS
 endif
