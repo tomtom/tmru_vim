@@ -143,14 +143,14 @@ endf
 " Canonicalize filename when using &shellslash (Windows)
 function! s:CanonicalizeFilename(fname)
     if ! exists('+shellslash')
-        return a:fname
+        return expand(a:fname)
     endif
     if &shellslash
         let fname = fnamemodify(a:fname, ':gs?\\?/?')
     else
         let fname = fnamemodify(a:fname, ':gs?/?\\?')
     endif
-    return fname
+    return expand(fname)
 endfunction
 
 function! s:MruRegister(fname)
