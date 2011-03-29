@@ -303,7 +303,7 @@ function! s:CheckFilenames(world, selected) "{{{3
         call s:MruStore(mru)
         echom "TMRU: Removed" save "unreadable files from mru list"
     endif
-    let world.base = copy(tmru)
+    let a:world.base = copy(mru)
     let a:world.state = 'reset'
     return a:world
 endf
