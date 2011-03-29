@@ -127,6 +127,7 @@ function! s:MruRetrieve()
     if exists('+shellslash')
         let r = map(r, 's:CanonicalizeFilename(v:val)')
     endif
+    let r = map(r, 'fnamemodify(v:val, ":~")')
     return r
 endf
 
