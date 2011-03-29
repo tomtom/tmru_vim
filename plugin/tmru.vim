@@ -66,7 +66,8 @@ if !exists("g:tmruExclude") "{{{2
     let g:tmruExclude = s:PS . '[Tt]e\?mp' . s:PS
                 \ . '\|' . s:PS . '\(vimfiles\|\.vim\)' . s:PS . '\(doc\|cache\)' . s:PS
                 \ . '\|\.tmp$'
-                \ . '\|'. s:PS .'COMMIT_EDITMSG$'
+                \ . '\|'. s:PS .'.git'. s:PS .'\(COMMIT_EDITMSG\|git-rebase-todo\)$'
+                \ . '\|'. s:PS .'quickfix$'
                 \ . '\|__.\{-}__$\|'.
                 \ substitute(escape(&suffixes, '~.*$^'), ',', '$\\|', 'g') .'$'
     unlet s:PS
