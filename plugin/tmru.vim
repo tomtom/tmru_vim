@@ -135,7 +135,8 @@ function! s:MruRetrieve()
     endif
 
     " make it relative to $HOME internally
-    let r = map(r, 'fnamemodify(v:val, ":~")')
+    " let r = map(r, 'fnamemodify(v:val, ":~")')
+ 
     return r
 endf
 
