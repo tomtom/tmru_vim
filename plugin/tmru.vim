@@ -128,9 +128,9 @@ function! s:MruRetrieve()
     " Canonicalize filename when using &shellslash (Windows)
     if exists('+shellslash')
         if &shellslash
-            let r = map(r, 'fnamemodify(v:val, ":gs?\\?/?")')
+            let r = map(r, 'substitute(v:val, "\\", "/", "g")')
         else
-            let r = map(r, 'fnamemodify(v:val, ":gs?/?\\?")')
+            let r = map(r, 'substitute(v:val, "/", "\\", "g")')
         endif
     endif
 
