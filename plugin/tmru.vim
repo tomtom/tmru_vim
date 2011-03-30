@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-03-27.
-" @Revision:    320
+" @Last Change: 2011-03-30.
+" @Revision:    321
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -128,9 +128,9 @@ function! s:MruRetrieve()
     " Canonicalize filename when using &shellslash (Windows)
     if exists('+shellslash')
         if &shellslash
-            let r = map(r, 'substitute(v:val, "\\", "/", "g")')
+            let r = map(r, 'substitute(v:val, ''\\'', ''/'', ''g'')')
         else
-            let r = map(r, 'substitute(v:val, "/", "\\", "g")')
+            let r = map(r, 'substitute(v:val, ''/'', ''\\'', ''g'')')
         endif
     endif
 
