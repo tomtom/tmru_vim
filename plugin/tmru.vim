@@ -124,9 +124,17 @@ endf
 
 function! s:MruRetrieve()
     let r = split(g:TMRU, '\n')
+
+    " Canonicalize filename when using &shellslash (Windows)
     if exists('+shellslash')
-        let r = map(r, 's:CanonicalizeFilename(v:val)')
+        if &shellslash
+            let r = map(r, 'fnamemodify(v:val, ":gs?\\?/?")')
+        else
+            let r = map(r, 'fnamemodify(v:val, ":gs?/?\\?")')
+        endif
     endif
+
+    " make it relative to $HOME internally
     let r = map(r, 'fnamemodify(v:val, ":~")')
     return r
 endf
@@ -140,22 +148,9 @@ function! s:MruStore(mru)
     call tlib#cache#Save(g:tmru_file, {'tmru': g:TMRU})
 endf
 
-" Canonicalize filename when using &shellslash (Windows)
-function! s:CanonicalizeFilename(fname)
-    if ! exists('+shellslash')
-        return expand(a:fname)
-    endif
-    if &shellslash
-        let fname = fnamemodify(a:fname, ':gs?\\?/?')
-    else
-        let fname = fnamemodify(a:fname, ':gs?/?\\?')
-    endif
-    return expand(fname)
-endfunction
-
 function! s:MruRegister(fname)
     " TLogVAR a:fname
-    let fname = s:CanonicalizeFilename(a:fname)
+    let fname = fnamemodify(a:fname, ':p')
     if g:tmruExclude != '' && fname =~ g:tmruExclude
         if &verbose | echom "tmru: ignore file" fname | end
         return
@@ -179,7 +174,7 @@ endf
 " Return 0 if the file isn't readable/doesn't exist.
 " Otherwise return 1.
 function! s:Edit(filename) "{{{3
-    let filename = s:CanonicalizeFilename(a:filename)
+    let filename = fnamemodify(a:filename, ':p')
     if filename == expand('%:p')
         return 1
     else
