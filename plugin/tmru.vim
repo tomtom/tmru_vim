@@ -281,23 +281,34 @@ function! s:RemoveItem(world, selected) "{{{3
 endf
 
 
+" Validate list of filenames in mru list.
+" This checks that files are readable and removes any (canonicalized)
+" duplicates.
 function! s:CheckFilenames(world, selected) "{{{3
-    " TODO: remove dupes?!
     let mru = s:MruRetrieve()
     let idx = len(mru) - 1
-    let save = 0
+    let uniqdict = {} " used to remove duplicates
+    let unreadable = 0
+    let dupes = 0
     while idx > 0
-        let file = mru[idx]
+        let file = fnamemodify(mru[idx], ':p')
         if !filereadable(file)
             " TLogVAR file
             call remove(mru, idx)
-            let save += 1
+            let unreadable += 1
+        elseif get(uniqdict, file)
+            " file is a dupe
+            let dupes += 1
+        else
+            " file is OK, add it to dictionary for dupe checking
+            let uniqdict[file] = 1
         endif
         let idx -= 1
     endwh
-    if save > 0
+    if unreadable > 0 || dupes > 0
+        let mru = keys(uniqdict)
         call s:MruStore(mru)
-        echom "TMRU: Removed" save "unreadable files from mru list"
+        echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate files from mru list"
     endif
     let a:world.base = copy(mru)
     let a:world.state = 'reset'
