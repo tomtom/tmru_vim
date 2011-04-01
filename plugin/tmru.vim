@@ -299,6 +299,7 @@ function! s:CheckFilenames(world, selected) "{{{3
         elseif get(uniqdict, file)
             " file is a dupe
             let dupes += 1
+            unlet mru[idx]
         else
             " file is OK, add it to dictionary for dupe checking
             let uniqdict[file] = 1
@@ -306,7 +307,6 @@ function! s:CheckFilenames(world, selected) "{{{3
         let idx -= 1
     endwh
     if unreadable > 0 || dupes > 0
-        let mru = keys(uniqdict)
         call s:MruStore(mru)
         echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate files from mru list"
     endif
