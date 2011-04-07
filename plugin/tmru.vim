@@ -291,8 +291,10 @@ function! s:CheckFilenames(world, selected) "{{{3
     let uniqdict = {} " used to remove duplicates
     let unreadable = 0
     let dupes = 0
+    let normalized = 0
     while idx > 0
-        let file = fnamemodify(mru[idx], ':p')
+        let file_p = fnamemodify(mru[idx], ':p')
+        let file = substitute(substitute(file_p, '\\\+', '\', 'g'), '/\+', '/', 'g')
         if !filereadable(file)
             " TLogVAR file
             call remove(mru, idx)
@@ -304,12 +306,17 @@ function! s:CheckFilenames(world, selected) "{{{3
         else
             " file is OK, add it to dictionary for dupe checking
             let uniqdict[file] = 1
+            if file_p != file
+                let normalized += 1
+                let mru[idx] = file
+            endif
         endif
         let idx -= 1
     endwh
-    if unreadable > 0 || dupes > 0
+    if unreadable > 0 || dupes > 0 || normalized > 0
         call s:MruStore(mru)
-        echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate files from mru list"
+        echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate"
+                    \ "files from mru list, and normalized" normalized "entries."
     endif
     let a:world.base = copy(mru)
     let a:world.state = 'reset'
