@@ -68,9 +68,9 @@ if !exists("g:tmruExclude") "{{{2
                 \ . '\|\.tmp$'
                 \ . '\|'. s:PS .'.git'. s:PS .'\(COMMIT_EDITMSG\|git-rebase-todo\)$'
                 \ . '\|'. s:PS .'quickfix$'
-                \ . '\|__.\{-}__$\|'
+                \ . '\|__.\{-}__$'
                 \ . '\|^fugitive:'
-                \ . substitute(escape(&suffixes, '~.*$^'), '\\\@<!,', '$\\|', 'g') .'$' " &suffixes, ORed (split on (not escaped) comma)
+                \ . '\|' . substitute(escape(&suffixes, '~.*$^'), '\\\@<!,', '$\\|', 'g') .'$' " &suffixes, ORed (split on (not escaped) comma)
     unlet s:PS
 endif
 
