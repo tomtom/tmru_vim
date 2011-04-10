@@ -406,6 +406,10 @@ command! TRecentlyUsedFiles call s:SelectMRU()
 " Edit the MRU list.
 command! TRecentlyUsedFilesEdit call s:EditMRU()
 
+" :display: :{count}TMRUSession
+" Open files from a previous session. By default, use the last session.
+command! -count TMRUSession call tmru#Session(s:MruRetrieve(), <count>)
+
 
 finish
 
