@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-03-30.
-" @Revision:    321
+" @Last Change: 2011-04-10.
+" @Revision:    347
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -146,16 +146,19 @@ function! s:MruRetrieve()
 endf
 
 
-function! s:MruStore(mru)
+function! s:MruStore(mru, save)
+    " TLogVAR a:save, g:tmru_file
     let g:TMRU = join(a:mru, "\n")
     " TLogVAR g:TMRU
-    " call TLogDBG(g:tmru_file)
+    " echom "DBG s:MruStore" g:tmru_file
     call s:BuildMenu(0)
-    call tlib#cache#Save(g:tmru_file, {'tmru': g:TMRU})
+    if a:save && !empty(g:tmru_file)
+        call tlib#cache#Save(g:tmru_file, {'tmru': g:TMRU})
+    endif
 endf
 
-function! s:MruRegister(fname)
-    " TLogVAR a:fname
+function! s:MruRegister(fname, save)
+    " TLogVAR a:fname, a:save
     let fname = fnamemodify(a:fname, ':p')
     if g:tmruExclude != '' && fname =~ g:tmruExclude
         if &verbose | echom "tmru: ignore file" fname | end
@@ -164,7 +167,8 @@ function! s:MruRegister(fname)
     if exists('b:tmruExclude') && b:tmruExclude
         return
     endif
-    let tmru = s:MruRetrieve()
+    let tmru0 = s:MruRetrieve()
+    let tmru = copy(tmru0)
     let imru = index(tmru, fname, 0, g:tmru_ignorecase)
     if imru == -1 && len(tmru) >= g:tmruSize
         let imru = g:tmruSize - 1
@@ -173,7 +177,9 @@ function! s:MruRegister(fname)
         call remove(tmru, imru)
     endif
     call insert(tmru, fname)
-    call s:MruStore(tmru)
+    if tmru != tmru0
+        call s:MruStore(tmru, a:save)
+    endif
 endf
 
 
@@ -232,7 +238,7 @@ function! s:SelectMRU()
                 let bi = index(tmru, bf)
                 " TLogVAR bi
                 call remove(tmru, bi)
-                call s:MruStore(tmru)
+                call s:MruStore(tmru, 1)
             endif
         endfor
         return 1
@@ -245,15 +251,15 @@ function! s:EditMRU()
     let tmru = s:MruRetrieve()
     let tmru1 = tlib#input#EditList('Edit MRU', tmru)
     if tmru != tmru1
-        call s:MruStore(tmru1)
+        call s:MruStore(tmru1, 1)
     endif
 endf
 
 
-function! s:AutoMRU(filename) "{{{3
+function! s:AutoMRU(filename, save) "{{{3
     " if &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != '' && filereadable(fnamemodify(a:filename, ":t"))
     if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
-        call s:MruRegister(a:filename)
+        call s:MruRegister(a:filename, a:save)
     endif
 endf
 
@@ -272,7 +278,7 @@ function! s:RemoveItem(world, selected) "{{{3
             call remove(mru, fidx)
         endif
     endfor
-    call s:MruStore(mru)
+    call s:MruStore(mru, 1)
     call a:world.ResetSelected()
     let a:world.base = copy(mru)
     if idx > len(mru)
@@ -318,7 +324,7 @@ function! s:CheckFilenames(world, selected) "{{{3
         let idx -= 1
     endwh
     if unreadable > 0 || dupes > 0 || normalized > 0
-        call s:MruStore(mru)
+        call s:MruStore(mru, 1)
         echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate"
                     \ "files from mru list, and normalized" normalized "entries."
     endif
