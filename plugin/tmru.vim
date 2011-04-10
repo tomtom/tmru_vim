@@ -30,8 +30,12 @@ if !exists("g:tmruMenuSize")
     let g:tmruMenuSize = 20 "{{{2
 endif
 if !exists("g:tmruEvents")
-    " A comma-separated list of events that trigger buffer registration.
-    let g:tmruEvents = 'BufWritePost,BufReadPost' "{{{2
+    " A dictionary of {EVENT: SAVE}. If SAVE evaluates to true, the list is 
+    " saved for those |{event}|.
+    "
+    " Old format: A comma-separated list of events that trigger buffer 
+    " registration.
+    let g:tmruEvents = {'BufWritePost': 1, 'BufReadPost': 1, 'BufWinEnter': 0, 'BufEnter': 0} "{{{2
 endif
 if !exists("g:tmru_file")
     if stridx(&viminfo, '!') == -1
@@ -327,7 +331,14 @@ endf
 augroup tmru
     autocmd!
     autocmd VimEnter * call s:BuildMenu(1)
-    exec 'autocmd '. g:tmruEvents .' * call s:AutoMRU(expand("<afile>:p"))'
+    if type(g:tmruEvents) == 1
+        exec 'autocmd '. g:tmruEvents .' * call s:AutoMRU(expand("<afile>:p"), 1)'
+    else
+        for [s:event, s:save] in items(g:tmruEvents)
+            exec 'autocmd '. s:event .' * call s:AutoMRU(expand("<afile>:p"), '. s:save .')'
+        endfor
+        unlet! s:event s:save
+    endif
 augroup END
 
 " Display the MRU list.

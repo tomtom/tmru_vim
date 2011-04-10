@@ -21,6 +21,12 @@ you want to match on the basename, add the following to
 
     let g:tmru_world.filter_format = 'fnamemodify(%s, ":t")'
 
+If you want to retain the last filter between calls of :TRecentlyUsedFiles, you 
+could also add the following lines: >
+
+    let g:tmru_world.cache_var = 'g:tmru_cache'
+    let g:tmru_world.restore_from_cache = ['filter']
+
 
 -----------------------------------------------------------------------
 Install~
@@ -70,8 +76,12 @@ g:tmruMenuSize                 (default: 20)
     menu.
 
                                                     *g:tmruEvents*
-g:tmruEvents                   (default: 'BufWritePost,BufReadPost')
-    A comma-separated list of events that trigger buffer registration.
+g:tmruEvents                   (default: {'BufWritePost': 1, 'BufReadPost': 1, 'BufWinEnter': 0, 'BufEnter': 0})
+    A dictionary of {EVENT: SAVE}. If SAVE evaluates to true, the list is 
+    saved for those |{event}|.
+    
+    Old format: A comma-separated list of events that trigger buffer 
+    registration.
 
                                                     *g:tmru_file*
 g:tmru_file                    (default: tlib#cache#Filename('tmru', 'files', 1))
