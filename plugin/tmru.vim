@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-04-10.
-" @Revision:    395
+" @Last Change: 2011-04-11.
+" @Revision:    398
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -365,7 +365,8 @@ function! s:CheckFilenames(world, selected) "{{{3
         elseif get(uniqdict, file)
             " file is a dupe
             let dupes += 1
-            unlet mru[idx]
+            call remove(mru, idx)
+            call remove(metadata, idx)
         else
             " file is OK, add it to dictionary for dupe checking
             let uniqdict[file] = 1
