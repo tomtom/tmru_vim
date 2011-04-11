@@ -55,8 +55,10 @@ Contents~
         g:tmru_file ............... |g:tmru_file|
         g:tmruExclude ............. |g:tmruExclude|
         g:tmru_ignorecase ......... |g:tmru_ignorecase|
+        TmruEdit .................. |TmruEdit()|
         :TRecentlyUsedFiles ....... |:TRecentlyUsedFiles|
         :TRecentlyUsedFilesEdit ... |:TRecentlyUsedFilesEdit|
+        :TMRUSession .............. |:TMRUSession|
 
 
 ========================================================================
@@ -97,6 +99,11 @@ g:tmruExclude                  (default: '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__
 g:tmru_ignorecase              (default: !has('fname_case'))
     If true, ignore case when comparing filenames.
 
+                                                    *TmruEdit()*
+TmruEdit(filename)
+    Return 0 if the file isn't readable/doesn't exist.
+    Otherwise return 1.
+
                                                     *:TRecentlyUsedFiles*
 :TRecentlyUsedFiles
     Display the MRU list.
@@ -104,6 +111,10 @@ g:tmru_ignorecase              (default: !has('fname_case'))
                                                     *:TRecentlyUsedFilesEdit*
 :TRecentlyUsedFilesEdit
     Edit the MRU list.
+
+                                                    *:TMRUSession*
+:{count}TMRUSession
+    Open files from a previous session. By default, use the last session.
 
 
 
