@@ -67,7 +67,7 @@ if !exists("g:TMRU_METADATA")
     endif
 endif
 if empty(g:TMRU_METADATA)
-    let g:TMRU_METADATA = join(repeat([string(s:Metadata('', {}))], len(mru)), "\n")
+    let g:TMRU_METADATA = join(repeat(['{}'], len(mru)), "\n")
 endif
 let s:did_increase_sessions = 0
 
