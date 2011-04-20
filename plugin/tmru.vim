@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-04-11.
-" @Revision:    398
+" @Last Change: 2011-04-20.
+" @Revision:    401
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -205,16 +205,13 @@ function! s:MruRegister(fname, save)
     let tmru = copy(tmru0)
     let metadata = copy(metadata0)
     let imru = index(tmru, fname, 0, g:tmru_ignorecase)
-    let use_meta = imru != -1
     if imru == -1 && len(tmru) >= g:tmruSize
         let imru = g:tmruSize - 1
     endif
     let fmeta = {}
     if imru != -1
         call remove(tmru, imru)
-        " if use_meta
-        "     let fmeta = remove(metadata, imru)
-        " endif
+        call remove(metadata, imru)
     endif
     call insert(tmru, fname)
     call insert(metadata, s:Metadata(fname, fmeta))
