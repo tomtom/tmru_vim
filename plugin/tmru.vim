@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-04-20.
-" @Revision:    401
+" @Last Change: 2011-08-24.
+" @Revision:    438
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -126,6 +126,15 @@ endif
 if !exists('g:tmru_debug')
     " :nodoc:
     let g:tmru_debug = 0   "{{{2
+endif
+
+
+if !exists('g:tmru_check_disk')
+    " If TRUE, allow disk checks when adding files to the list by 
+    " means of a registered event (see |g:tmruEvents|).
+    " This may cause annoying slow-downs in certain settings. In this 
+    " case, set this variable to 0 in your |vimrc| file.
+    let g:tmru_check_disk = 1   "{{{2
 endif
 
 
@@ -296,6 +305,7 @@ function! s:AutoMRU(filename, event, save) "{{{3
         call tmru#DisplayUnreadableFiles(mru)
     endif
     if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
+                \ && (!g:tmru_check_disk || (filereadable(a:filename) && !isdirectory(a:filename)))
         if a:event == 'BufDelete'
             let [mru, metadata] = s:MruRetrieve()
             let fidx = index(mru, a:filename)
