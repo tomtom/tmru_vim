@@ -35,7 +35,7 @@ if !exists("g:tmruEvents")
     "
     " Old format: A comma-separated list of events that trigger buffer 
     " registration.
-    let g:tmruEvents = {'BufWritePost': 1, 'BufReadPost': 1, 'BufWinEnter': 0, 'BufEnter': 0} "{{{2
+    let g:tmruEvents = {'BufWritePost': 1, 'BufReadPost': 1, 'BufWinEnter': 0, 'BufEnter': 0, 'BufDelete': 0} "{{{2
 endif
 if !exists("g:tmru_file")
     if stridx(&viminfo, '!') == -1
