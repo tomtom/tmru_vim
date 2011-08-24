@@ -199,36 +199,6 @@ function! s:Metadata(filename, metadata) "{{{3
 endf
 
 
-function! s:MruRegister(fname, save)
-    " TLogVAR a:fname, a:save
-    let fname = fnamemodify(a:fname, ':p')
-    if g:tmruExclude != '' && fname =~ g:tmruExclude
-        if &verbose | echom "tmru: ignore file" fname | end
-        return
-    endif
-    if exists('b:tmruExclude') && b:tmruExclude
-        return
-    endif
-    let [tmru0, metadata0] = s:MruRetrieve()
-    let tmru = copy(tmru0)
-    let metadata = copy(metadata0)
-    let imru = index(tmru, fname, 0, g:tmru_ignorecase)
-    if imru == -1 && len(tmru) >= g:tmruSize
-        let imru = g:tmruSize - 1
-    endif
-    let fmeta = {}
-    if imru != -1
-        call remove(tmru, imru)
-        call remove(metadata, imru)
-    endif
-    call insert(tmru, fname)
-    call insert(metadata, s:Metadata(fname, fmeta))
-    if tmru != tmru0
-        call s:MruStore(tmru, metadata, a:save)
-    endif
-endf
-
-
 " Return 0 if the file isn't readable/doesn't exist.
 " Otherwise return 1.
 function! TmruEdit(filename) "{{{3
@@ -317,6 +287,35 @@ function! s:AutoMRU(filename, save) "{{{3
     if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
             " let metadata[fidx].sessions = get(metadata[fidx], 'sessions', -1) + 1
         call s:MruRegister(a:filename, a:save)
+    endif
+
+
+function! s:MruRegister(fname, save)
+    let fname = fnamemodify(a:fname, ':p')
+    " TLogVAR a:fname, a:save, fname
+    if g:tmruExclude != '' && fname =~ g:tmruExclude
+        if &verbose | echom "tmru: ignore file" fname | end
+        return
+    endif
+    if exists('b:tmruExclude') && b:tmruExclude
+        return
+    endif
+    let [tmru0, metadata0] = s:MruRetrieve()
+    let tmru = copy(tmru0)
+    let metadata = copy(metadata0)
+    let imru = index(tmru, fname, 0, g:tmru_ignorecase)
+    if imru == -1 && len(tmru) >= g:tmruSize
+        let imru = g:tmruSize - 1
+    endif
+    let fmeta = {}
+    if imru != -1
+        call remove(tmru, imru)
+        call remove(metadata, imru)
+    endif
+    call insert(tmru, fname)
+    call insert(metadata, s:Metadata(fname, fmeta))
+    if tmru != tmru0
+        call s:MruStore(tmru, metadata, a:save)
     endif
 endf
 
