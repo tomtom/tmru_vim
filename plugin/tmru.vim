@@ -282,12 +282,20 @@ function! s:EditMRU()
 endf
 
 
-function! s:AutoMRU(filename, save) "{{{3
+function! s:AutoMRU(filename, event, save) "{{{3
     " if &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != '' && filereadable(fnamemodify(a:filename, ":t"))
     if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
+        if a:event == 'BufDelete'
+            let [mru, metadata] = s:MruRetrieve()
+            let fidx = index(mru, a:filename)
+            " TLogVAR fidx
             " let metadata[fidx].sessions = get(metadata[fidx], 'sessions', -1) + 1
+            call s:MruStore(mru, metadata, 0)
+        endif
         call s:MruRegister(a:filename, a:save)
     endif
+    " TLogVAR "exit"
+endf
 
 
 function! s:MruRegister(fname, save)
@@ -397,10 +405,10 @@ augroup tmru
     autocmd!
     autocmd VimEnter * call s:BuildMenu(1)
     if type(g:tmruEvents) == 1
-        exec 'autocmd '. g:tmruEvents .' * call s:AutoMRU(expand("<afile>:p"), 1)'
+        exec 'autocmd '. g:tmruEvents .' * call s:AutoMRU(expand("<afile>:p"), "", 1)'
     else
         for [s:event, s:save] in items(g:tmruEvents)
-            exec 'autocmd '. s:event .' * call s:AutoMRU(expand("<afile>:p"), '. s:save .')'
+            exec 'autocmd '. s:event .' * call s:AutoMRU(expand("<afile>:p"), '. string(s:event) .', '. s:save .')'
         endfor
         unlet! s:event s:save
     endif
