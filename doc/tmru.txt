@@ -55,10 +55,10 @@ Contents~
         g:tmru_file ............... |g:tmru_file|
         g:tmruExclude ............. |g:tmruExclude|
         g:tmru_ignorecase ......... |g:tmru_ignorecase|
+        g:tmru_check_disk ......... |g:tmru_check_disk|
         TmruEdit .................. |TmruEdit()|
         :TRecentlyUsedFiles ....... |:TRecentlyUsedFiles|
         :TRecentlyUsedFilesEdit ... |:TRecentlyUsedFilesEdit|
-        :TMRUSession .............. |:TMRUSession|
 
 
 ========================================================================
@@ -78,7 +78,7 @@ g:tmruMenuSize                 (default: 20)
     menu.
 
                                                     *g:tmruEvents*
-g:tmruEvents                   (default: {'BufWritePost': 1, 'BufReadPost': 1, 'BufWinEnter': 0, 'BufEnter': 0})
+g:tmruEvents                   (default: {'BufWritePost': 1, 'BufReadPost': 1, 'BufWinEnter': 0, 'BufEnter': 0, 'BufDelete': 0})
     A dictionary of {EVENT: SAVE}. If SAVE evaluates to true, the list is 
     saved for those |{event}|.
     
@@ -99,6 +99,13 @@ g:tmruExclude                  (default: '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__
 g:tmru_ignorecase              (default: !has('fname_case'))
     If true, ignore case when comparing filenames.
 
+                                                    *g:tmru_check_disk*
+g:tmru_check_disk              (default: 1)
+    If TRUE, allow disk checks when adding files to the list by 
+    means of a registered event (see |g:tmruEvents|).
+    This may cause annoying slow-downs in certain settings. In this 
+    case, set this variable to 0 in your |vimrc| file.
+
                                                     *TmruEdit()*
 TmruEdit(filename)
     Return 0 if the file isn't readable/doesn't exist.
@@ -111,10 +118,6 @@ TmruEdit(filename)
                                                     *:TRecentlyUsedFilesEdit*
 :TRecentlyUsedFilesEdit
     Edit the MRU list.
-
-                                                    *:TMRUSession*
-:{count}TMRUSession
-    Open files from a previous session. By default, use the last session.
 
 
 
