@@ -69,7 +69,7 @@ endif
 if empty(g:TMRU_METADATA)
     let g:TMRU_METADATA = join(repeat(['{}'], len(split(g:TMRU, '\n'))), "\n")
 endif
-let s:did_increase_sessions = 0
+" let s:did_increase_sessions = 0
 
 
 if !exists("g:tmruExclude") "{{{2
@@ -143,6 +143,22 @@ endf
 function! s:MruRetrieve()
     let mru = split(g:TMRU, '\n')
     let metadata = map(split(g:TMRU_METADATA, '\n'), 'eval(v:val)')
+    " if !s:did_increase_sessions
+    "     for metaidx in range(len(metadata))
+    "         let metaitem = metadata[metaidx]
+    "         if type(metaitem) != 4
+    "             echohl ErrorMsg
+    "             echom "TMRU: metaitem is not a dictionary" string(metaitem)
+    "             echohl NONE
+    "             unlet metaitem
+    "             let metaitem = {}
+    "         endif
+    "         let metaitem.sessions = get(metaitem, 'sessions', -1) + 1
+    "         let metadata[metaidx] = metaitem
+    "     endfor
+    "     let s:did_increase_sessions = 1
+    "     " echom "DBG s:MruStore" string(metadata)
+    " endif
 
     " Canonicalize filename when using &shellslash (Windows)
     if exists('+shellslash')
@@ -155,7 +171,8 @@ function! s:MruRetrieve()
 
     " make it relative to $HOME internally
     " let mru = map(mru, 'fnamemodify(v:val, ":~")')
- 
+
+    " TLogVAR mru
     return [mru, metadata]
 endf
 
@@ -164,15 +181,6 @@ function! s:MruStore(mru, metadata, save)
     " TLogVAR a:save, g:tmru_file
     let g:TMRU = join(a:mru, "\n")
     let metadata = a:metadata
-    if !s:did_increase_sessions
-        for metaidx in range(len(metadata))
-            let metaitem = metadata[metaidx]
-            let metaitem.sessions = get(metaitem, 'sessions', -1) + 1
-            let metadata[metaidx] = metaitem
-        endfor
-        let s:did_increase_sessions = 1
-        " echom "DBG s:MruStore" string(metadata)
-    endif
     let g:TMRU_METADATA = join(map(metadata, 'string(v:val)'), "\n")
     " TLogVAR g:TMRU
     " echom "DBG s:MruStore" g:tmru_file
@@ -307,6 +315,7 @@ endf
 function! s:AutoMRU(filename, save) "{{{3
     " if &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != '' && filereadable(fnamemodify(a:filename, ":t"))
     if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
+            " let metadata[fidx].sessions = get(metadata[fidx], 'sessions', -1) + 1
         call s:MruRegister(a:filename, a:save)
     endif
 endf
@@ -406,5 +415,5 @@ command! TRecentlyUsedFilesEdit call s:EditMRU()
 
 " :display: :{count}TMRUSession
 " Open files from a previous session. By default, use the last session.
-command! -count TMRUSession call tmru#Session(s:MruRetrieve(), <count>)
+" command! -count TMRUSession call tmru#Session(s:MruRetrieve(), <count>)
 
