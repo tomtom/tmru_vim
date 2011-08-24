@@ -123,6 +123,12 @@ if !exists('g:tmru_world') "{{{2
 endif
 
 
+if !exists('g:tmru_debug')
+    " :nodoc:
+    let g:tmru_debug = 0   "{{{2
+endif
+
+
 function! s:BuildMenu(initial) "{{{3
     if !empty(g:tmruMenu)
         if !a:initial
@@ -284,6 +290,11 @@ endf
 
 function! s:AutoMRU(filename, event, save) "{{{3
     " if &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != '' && filereadable(fnamemodify(a:filename, ":t"))
+    " TLogVAR a:filename, a:event, a:save, &buftype
+    if g:tmru_debug
+        let [mru, metadata] = s:MruRetrieve()
+        call tmru#DisplayUnreadableFiles(mru)
+    endif
     if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
         if a:event == 'BufDelete'
             let [mru, metadata] = s:MruRetrieve()
@@ -293,6 +304,10 @@ function! s:AutoMRU(filename, event, save) "{{{3
             call s:MruStore(mru, metadata, 0)
         endif
         call s:MruRegister(a:filename, a:save)
+    endif
+    if g:tmru_debug
+        let [mru, metadata] = s:MruRetrieve()
+        call tmru#DisplayUnreadableFiles(mru)
     endif
     " TLogVAR "exit"
 endf
