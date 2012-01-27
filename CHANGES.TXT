@@ -35,3 +35,43 @@ already registered.
 0.9
 - <del> ... Remove item(s)
 
+version: "0.10"
+  - .gitignore
+  - Don't check for has('vim_starting')
+  - EditMRU(): Save the new, not the old list
+  - Fix g:tmruExclude default for '+shellslash'.
+  - Attempt at canonical filenames on Windows.
+  - Merge branch 'canonical'
+  - tmruExclude, s:PS: use temporary script-local variable
+  - Also exclude *.tmp and COMMIT_EDITMSG (suggested by blueyed)
+  - Ignore `git-rebase-todo` and `quickfix` by default.
+  - Make filename relative to home dir.
+  - Fix CheckFilenames.
+  - Expand() filename in CanonicalizeFilename for "~".
+  - Optimize performace with MruRetrieve.
+  - Deactivate `:~` modification; performance reasons.
+  - Use `substitute` instead of `fnamemodify`.
+  - s:MruRetrieve(): Use single quotes
+  - Do not split &suffixes on escaped comma.
+  - Remove duplicates in CheckFilenames.
+  - Use unlet() instead of keys() to remove dupes.
+  - Exclude 'fugitive:' files by default.
+  - Fix g:tmruExclude default pattern.
+  - Normalization of entries in CheckFilenames.
+  - g:tmruEvents is a dictionary now (was a string)
+  - Some optimizations with respect to when the list should be saved
+  - Experimental: Maintain some metadata
+  - :TMRUSession command
+  - Undo some over-engineering :-), fixes #14
+  - s:CheckFilenames(): Also remove metadata when removing a dupe
+  - Fix setup of g:TMRU_METADATA; undefined "mru".
+  - s:MruRegister(): also remove metadata when removing an item
+  - disabled sessions
+  - Moved function s:MruRegister()
+  - Added BufDelete to g:tmruEvents
+  - s:AutoMRU() takes event argument
+  - g:tmru_debug
+  - g:tmru_check_disk (fixes #20)
+  - tmru#DisplayUnreadableFiles(mru)
+  MD5 checksum: 7c61e5342a1551f30a2d61fd7dd4965e
+
