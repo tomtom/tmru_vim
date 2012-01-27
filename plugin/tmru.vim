@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2011-08-24.
-" @Revision:    438
+" @Last Change: 2012-01-27.
+" @Revision:    445
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -14,7 +14,7 @@ if !exists('loaded_tlib') || loaded_tlib < 28
     echoerr "tlib >= 0.28 is required"
     finish
 endif
-let loaded_tmru = 9
+let loaded_tmru = 10
 
 if !exists("g:tmruSize")
     " The number of recently edited files that are registered.
