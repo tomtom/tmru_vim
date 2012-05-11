@@ -3,18 +3,18 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-01-27.
-" @Revision:    445
+" @Last Change: 2012-05-11.
+" @Revision:    450
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
     finish
 endif
-if !exists('loaded_tlib') || loaded_tlib < 28
-    echoerr "tlib >= 0.28 is required"
+if !exists('loaded_tlib') || loaded_tlib < 45
+    echoerr "tlib >= 0.45 is required"
     finish
 endif
-let loaded_tmru = 10
+let loaded_tmru = 11
 
 if !exists("g:tmruSize")
     " The number of recently edited files that are registered.
@@ -42,7 +42,7 @@ if !exists("g:tmru_file")
         " Where to save the file list. The default value is only 
         " effective, if 'viminfo' doesn't contain '!' -- in which case 
         " the 'viminfo' will be used.
-        let g:tmru_file = tlib#cache#Filename('tmru', 'files', 1) "{{{2
+        let g:tmru_file = tlib#persistent#Filename('tmru', 'files', 1) "{{{2
     else
         let g:tmru_file = ''
     endif
@@ -54,7 +54,7 @@ if !exists("g:TMRU")
     if empty(g:tmru_file)
         let g:TMRU = ''
     else
-        let g:TMRU = get(tlib#cache#Get(g:tmru_file), 'tmru', '')
+        let g:TMRU = get(tlib#persistent#Get(g:tmru_file), 'tmru', '')
     endif
 endif
 
@@ -63,7 +63,7 @@ if !exists("g:TMRU_METADATA")
     if empty(g:tmru_file)
         let g:TMRU_METADATA = ''
     else
-        let g:TMRU_METADATA = get(tlib#cache#Get(g:tmru_file), 'metadata', '')
+        let g:TMRU_METADATA = get(tlib#persistent#Get(g:tmru_file), 'metadata', '')
     endif
 endif
 if empty(g:TMRU_METADATA)
@@ -201,7 +201,7 @@ function! s:MruStore(mru, metadata, save)
     " echom "DBG s:MruStore" g:tmru_file
     call s:BuildMenu(0)
     if a:save && !empty(g:tmru_file)
-        call tlib#cache#Save(g:tmru_file, {'tmru': g:TMRU, 'metadata': g:TMRU_METADATA})
+        call tlib#persistent#Save(g:tmru_file, {'tmru': g:TMRU, 'metadata': g:TMRU_METADATA})
     endif
 endf
 
