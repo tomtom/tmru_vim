@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-05-11.
-" @Revision:    450
+" @Last Change: 2012-06-05.
+" @Revision:    453
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -251,29 +251,31 @@ endf
 function! s:SelectMRU()
     " TLogDBG "SelectMRU#1"
     let [tmru, metadata] = s:MruRetrieve()
-    " TLogDBG "SelectMRU#2"
-    " TLogVAR tmru
-    let world = tlib#World#New(g:tmru_world)
-    call world.Set_display_format('filename')
-    " TLogDBG "SelectMRU#3"
-    let world.base = copy(tmru)
-    " TLogDBG "SelectMRU#4"
-    " let bs    = tlib#input#List('m', 'Select file', copy(tmru), g:tmru_handlers)
-    let bs    = tlib#input#ListW(world)
-    " TLogDBG "SelectMRU#5"
-    " TLogVAR bs
-    if !empty(bs)
-        for bf in bs
-            " TLogVAR bf
-            if !TmruEdit(bf)
-                let bi = index(tmru, bf)
-                " TLogVAR bi
-                call remove(tmru, bi)
-                call remove(metadata, bi)
-                call s:MruStore(tmru, metadata, 1)
-            endif
-        endfor
-        return 1
+    if !empty(tmru)
+        " TLogDBG "SelectMRU#2"
+        " TLogVAR tmru
+        let world = tlib#World#New(g:tmru_world)
+        call world.Set_display_format('filename')
+        " TLogDBG "SelectMRU#3"
+        let world.base = copy(tmru)
+        " TLogDBG "SelectMRU#4"
+        " let bs    = tlib#input#List('m', 'Select file', copy(tmru), g:tmru_handlers)
+        let bs    = tlib#input#ListW(world)
+        " TLogDBG "SelectMRU#5"
+        " TLogVAR bs
+        if !empty(bs)
+            for bf in bs
+                " TLogVAR bf
+                if !TmruEdit(bf)
+                    let bi = index(tmru, bf)
+                    " TLogVAR bi
+                    call remove(tmru, bi)
+                    call remove(metadata, bi)
+                    call s:MruStore(tmru, metadata, 1)
+                endif
+            endfor
+            return 1
+        endif
     endif
     return 0
 endf
