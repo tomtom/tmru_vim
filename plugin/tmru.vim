@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-06-05.
-" @Revision:    453
+" @Last Change: 2012-06-08.
+" @Revision:    505
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -14,29 +14,66 @@ if !exists('loaded_tlib') || loaded_tlib < 45
     echoerr "tlib >= 0.45 is required"
     finish
 endif
-let loaded_tmru = 11
+let loaded_tmru = 12
+
 
 if !exists("g:tmruSize")
     " The number of recently edited files that are registered.
     let g:tmruSize = 50 "{{{2
 endif
+
+
 if !exists("g:tmruMenu")
     " The menu's prefix. If the value is "", the menu will be disabled.
     let g:tmruMenu = 'File.M&RU.' "{{{2
 endif
+
+
 if !exists("g:tmruMenuSize")
     " The number of recently edited files that are displayed in the 
     " menu.
     let g:tmruMenuSize = 20 "{{{2
 endif
-if !exists("g:tmruEvents")
-    " A dictionary of {EVENT: SAVE}. If SAVE evaluates to true, the list is 
-    " saved for those |{event}|.
-    "
-    " Old format: A comma-separated list of events that trigger buffer 
-    " registration.
-    let g:tmruEvents = {'BufWritePost': 1, 'BufReadPost': 1, 'BufWinEnter': 0, 'BufEnter': 0, 'BufDelete': 0} "{{{2
+
+
+if !exists("g:tmru_events")
+    " A dictionary of {EVENT: [LOAD, SAVE]}. If LOAD or SAVE evaluates 
+    " to true, the mru list is load/saved for the respective |{event}|.
+    " :read: let g:tmru_events = {...} "{{{2
+    if exists('g:tmruEvents')
+        if type(g:tmruEvents) == 1
+            let g:tmru_events = {}
+            for s:ev in g:tmruEvents
+                let g:tmru_events[s:ev] = {'load': 0, 'save': 1}
+            endfor
+            unlet s:ev
+        else
+            let g:tmru_events = map(g:tmruEvents, "{'load': 0, 'save': v:val}")
+        endif
+        unlet g:tmruEvents
+    else
+        let g:tmru_events = {
+                    \ 'FocusGained':  {'load': 1, 'save': -1},
+                    \ 'FocusLost':    {'load': 0, 'save': 1},
+                    \ 'BufWritePost': {'load': 0, 'save': 1},
+                    \ 'BufReadPost':  {'load': 0, 'save': 1}, 
+                    \ 'BufWinEnter':  {'load': 0, 'save': 1},
+                    \ 'BufEnter':     {'load': 0, 'save': 0},
+                    \ 'BufDelete':    {'load': 0, 'save': 0}
+                    \ }
+    endif
 endif
+
+
+if !exists('g:tmru_update_viminfo')
+    " If true, load and save the viminfo file on certain events -- see 
+    " |g:tmru_events|.
+    " This is useful if 'viminfo' includes '!' and |g:tmru_file| is 
+    " empty and you run multiple instances of vim.
+    let g:tmru_update_viminfo = 0   "{{{2
+endif
+
+
 if !exists("g:tmru_file")
     if stridx(&viminfo, '!') == -1
         " Where to save the file list. The default value is only 
@@ -47,29 +84,6 @@ if !exists("g:tmru_file")
         let g:tmru_file = ''
     endif
 endif
-
-
-" Don't change the value of this variable.
-if !exists("g:TMRU")
-    if empty(g:tmru_file)
-        let g:TMRU = ''
-    else
-        let g:TMRU = get(tlib#persistent#Get(g:tmru_file), 'tmru', '')
-    endif
-endif
-
-
-if !exists("g:TMRU_METADATA")
-    if empty(g:tmru_file)
-        let g:TMRU_METADATA = ''
-    else
-        let g:TMRU_METADATA = get(tlib#persistent#Get(g:tmru_file), 'metadata', '')
-    endif
-endif
-if empty(g:TMRU_METADATA)
-    let g:TMRU_METADATA = join(repeat(['{}'], len(split(g:TMRU, '\n'))), "\n")
-endif
-" let s:did_increase_sessions = 0
 
 
 if !exists("g:tmruExclude") "{{{2
@@ -131,11 +145,14 @@ endif
 
 if !exists('g:tmru_check_disk')
     " If TRUE, allow disk checks when adding files to the list by 
-    " means of a registered event (see |g:tmruEvents|).
+    " means of a registered event (see |g:tmru_events|).
     " This may cause annoying slow-downs in certain settings. In this 
     " case, set this variable to 0 in your |vimrc| file.
     let g:tmru_check_disk = 1   "{{{2
 endif
+
+
+" let s:did_increase_sessions = 0
 
 
 function! s:BuildMenu(initial) "{{{3
@@ -155,8 +172,39 @@ function! s:BuildMenu(initial) "{{{3
 endf
 
 
-function! s:MruRetrieve()
+" s:MruRetrieve(?read_data=0)
+function! s:MruRetrieve(...)
+    let read_data = a:0 >= 1 ? a:1 : 0
+    if empty(g:tmru_file)
+        if read_data && exists("g:TMRU") && exists("g:TMRU_METADATA")
+            if g:tmru_update_viminfo
+                rviminfo
+            endif
+        endif
+        if !exists("g:TMRU")
+            let g:TMRU = ''
+        endif
+        if !exists("g:TMRU_METADATA")
+            let g:TMRU_METADATA = ''
+        endif
+    else
+        if read_data
+            if exists('s:tmru_mtime') && getftime(g:tmru_file) == s:tmru_mtime
+                let read_data = 0
+            endif
+        elseif !exists("g:TMRU") || !exists("g:TMRU_METADATA")
+            let read_data = 1
+        endif
+        if read_data
+            let g:TMRU = get(tlib#persistent#Get(g:tmru_file), 'tmru', '')
+            let g:TMRU_METADATA = get(tlib#persistent#Get(g:tmru_file), 'metadata', '')
+            let s:tmru_mtime = getftime(g:tmru_file)
+        endif
+    endif
     let mru = split(g:TMRU, '\n')
+    if empty(g:TMRU_METADATA)
+        let g:TMRU_METADATA = join(repeat(['{}'], len(mru)), "\n")
+    endif
     let metadata = map(split(g:TMRU_METADATA, '\n'), 'eval(v:val)')
     " if !s:did_increase_sessions
     "     for metaidx in range(len(metadata))
@@ -200,8 +248,14 @@ function! s:MruStore(mru, metadata, save)
     " TLogVAR g:TMRU
     " echom "DBG s:MruStore" g:tmru_file
     call s:BuildMenu(0)
-    if a:save && !empty(g:tmru_file)
-        call tlib#persistent#Save(g:tmru_file, {'tmru': g:TMRU, 'metadata': g:TMRU_METADATA})
+    if a:save
+        if empty(g:tmru_file)
+            if g:tmru_update_viminfo
+                wviminfo
+            endif
+        else
+            call tlib#persistent#Save(g:tmru_file, {'tmru': g:TMRU, 'metadata': g:TMRU_METADATA})
+        endif
     endif
 endf
 
@@ -299,23 +353,28 @@ function! s:EditMRU()
 endf
 
 
-function! s:AutoMRU(filename, event, save) "{{{3
+function! s:AutoMRU(filename, event, props) "{{{3
     " if &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != '' && filereadable(fnamemodify(a:filename, ":t"))
-    " TLogVAR a:filename, a:event, a:save, &buftype
+    " TLogVAR a:filename, a:event, a:props, &buftype
     if g:tmru_debug
-        let [mru, metadata] = s:MruRetrieve()
+        let [mru, metadata] = s:MruRetrieve(a:props.load)
         call tmru#DisplayUnreadableFiles(mru)
     endif
-    if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
-                \ && (!g:tmru_check_disk || (filereadable(a:filename) && !isdirectory(a:filename)))
-        if a:event == 'BufDelete'
-            let [mru, metadata] = s:MruRetrieve()
-            let fidx = index(mru, a:filename)
-            " TLogVAR fidx
-            " let metadata[fidx].sessions = get(metadata[fidx], 'sessions', -1) + 1
-            call s:MruStore(mru, metadata, 0)
+    if a:props.load
+        call s:MruRetrieve(a:props.load)
+    endif
+    if a:props.save >= 0
+        if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
+                    \ && (!g:tmru_check_disk || (filereadable(a:filename) && !isdirectory(a:filename)))
+            if a:event == 'BufDelete'
+                let [mru, metadata] = s:MruRetrieve()
+                let fidx = index(mru, a:filename)
+                " TLogVAR fidx
+                " let metadata[fidx].sessions = get(metadata[fidx], 'sessions', -1) + 1
+                call s:MruStore(mru, metadata, 0)
+            endif
+            call s:MruRegister(a:filename, a:props.save)
         endif
-        call s:MruRegister(a:filename, a:save)
     endif
     if g:tmru_debug
         let [mru, metadata] = s:MruRetrieve()
@@ -431,14 +490,10 @@ endf
 augroup tmru
     autocmd!
     autocmd VimEnter * call s:BuildMenu(1)
-    if type(g:tmruEvents) == 1
-        exec 'autocmd '. g:tmruEvents .' * call s:AutoMRU(expand("<afile>:p"), "", 1)'
-    else
-        for [s:event, s:save] in items(g:tmruEvents)
-            exec 'autocmd '. s:event .' * call s:AutoMRU(expand("<afile>:p"), '. string(s:event) .', '. s:save .')'
-        endfor
-        unlet! s:event s:save
-    endif
+    for [s:event, s:props] in items(g:tmru_events)
+        exec 'autocmd '. s:event .' * call s:AutoMRU(expand("<afile>:p"), '. string(s:event) .', '. string(s:props) .')'
+    endfor
+    unlet! s:event s:props
 augroup END
 
 " Display the MRU list.
