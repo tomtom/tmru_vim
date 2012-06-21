@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-06-08.
-" @Revision:    505
+" @Last Change: 2012-06-21.
+" @Revision:    508
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -39,6 +39,13 @@ endif
 if !exists("g:tmru_events")
     " A dictionary of {EVENT: [LOAD, SAVE]}. If LOAD or SAVE evaluates 
     " to true, the mru list is load/saved for the respective |{event}|.
+    "
+    " LOAD =  1: Load the external representation of the mru list
+    " LOAD =  0: Use the internal representation of the mru list
+    " SAVE =  1: Save the mru list to its external representation
+    " SAVE =  0: Save the mru list to its internal representation
+    " SAVE = -1: Ignore this event for saving.
+    "
     " :read: let g:tmru_events = {...} "{{{2
     if exists('g:tmruEvents')
         if type(g:tmruEvents) == 1

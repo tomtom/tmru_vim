@@ -48,7 +48,8 @@ Contents~
         g:tmruSize ................ |g:tmruSize|
         g:tmruMenu ................ |g:tmruMenu|
         g:tmruMenuSize ............ |g:tmruMenuSize|
-        g:tmruEvents .............. |g:tmruEvents|
+        g:tmru_events ............. |g:tmru_events|
+        g:tmru_update_viminfo ..... |g:tmru_update_viminfo|
         g:tmru_file ............... |g:tmru_file|
         g:tmruExclude ............. |g:tmruExclude|
         g:tmru_ignorecase ......... |g:tmru_ignorecase|
@@ -74,16 +75,27 @@ g:tmruMenuSize                 (default: 20)
     The number of recently edited files that are displayed in the 
     menu.
 
-                                                    *g:tmruEvents*
-g:tmruEvents                   (default: {'BufWritePost': 1, 'BufReadPost': 1, 'BufWinEnter': 0, 'BufEnter': 0, 'BufDelete': 0})
-    A dictionary of {EVENT: SAVE}. If SAVE evaluates to true, the list is 
-    saved for those |{event}|.
+                                                    *g:tmru_events*
+g:tmru_events                  (default: {...})
+    A dictionary of {EVENT: [LOAD, SAVE]}. If LOAD or SAVE evaluates 
+    to true, the mru list is load/saved for the respective |{event}|.
     
-    Old format: A comma-separated list of events that trigger buffer 
-    registration.
+    LOAD =  1: Load the external representation of the mru list
+    LOAD =  0: Use the internal representation of the mru list
+    SAVE =  1: Save the mru list to its external representation
+    SAVE =  0: Save the mru list to its internal representation
+    SAVE = -1: Ignore this event for saving.
+    
+
+                                                    *g:tmru_update_viminfo*
+g:tmru_update_viminfo          (default: 0)
+    If true, load and save the viminfo file on certain events -- see 
+    |g:tmru_events|.
+    This is useful if 'viminfo' includes '!' and |g:tmru_file| is 
+    empty and you run multiple instances of vim.
 
                                                     *g:tmru_file*
-g:tmru_file                    (default: tlib#cache#Filename('tmru', 'files', 1))
+g:tmru_file                    (default: tlib#persistent#Filename('tmru', 'files', 1))
     Where to save the file list. The default value is only 
     effective, if 'viminfo' doesn't contain '!' -- in which case 
     the 'viminfo' will be used.
@@ -99,7 +111,7 @@ g:tmru_ignorecase              (default: !has('fname_case'))
                                                     *g:tmru_check_disk*
 g:tmru_check_disk              (default: 1)
     If TRUE, allow disk checks when adding files to the list by 
-    means of a registered event (see |g:tmruEvents|).
+    means of a registered event (see |g:tmru_events|).
     This may cause annoying slow-downs in certain settings. In this 
     case, set this variable to 0 in your |vimrc| file.
 
