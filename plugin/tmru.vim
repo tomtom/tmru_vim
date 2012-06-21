@@ -203,8 +203,9 @@ function! s:MruRetrieve(...)
             let read_data = 1
         endif
         if read_data
-            let g:TMRU = get(tlib#persistent#Get(g:tmru_file), 'tmru', '')
-            let g:TMRU_METADATA = get(tlib#persistent#Get(g:tmru_file), 'metadata', '')
+            let data = tlib#persistent#Get(g:tmru_file)
+            let g:TMRU = get(data, 'tmru', '')
+            let g:TMRU_METADATA = get(data, 'metadata', '')
             let s:tmru_mtime = getftime(g:tmru_file)
         endif
     endif
