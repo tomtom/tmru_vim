@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-06-21.
-" @Revision:    508
+" @Last Change: 2012-07-18.
+" @Revision:    517
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -159,15 +159,12 @@ if !exists('g:tmru_check_disk')
 endif
 
 
-" let s:did_increase_sessions = 0
-
-
 function! s:BuildMenu(initial) "{{{3
     if !empty(g:tmruMenu)
         if !a:initial
             silent! exec 'aunmenu '. g:tmruMenu
         endif
-        let [mru, metadata] = s:MruRetrieve()
+        let mru = s:MruRetrieve()
         if g:tmruMenuSize > 0 && len(mru) > g:tmruMenuSize
             let mru = mru[0 : g:tmruMenuSize - 1]
         endif
@@ -183,7 +180,7 @@ endf
 function! s:MruRetrieve(...)
     let read_data = a:0 >= 1 ? a:1 : 0
     if empty(g:tmru_file)
-        if read_data && exists("g:TMRU") && exists("g:TMRU_METADATA")
+        if read_data && exists("g:TMRU")
             if g:tmru_update_viminfo
                 rviminfo
             endif
@@ -191,45 +188,21 @@ function! s:MruRetrieve(...)
         if !exists("g:TMRU")
             let g:TMRU = ''
         endif
-        if !exists("g:TMRU_METADATA")
-            let g:TMRU_METADATA = ''
-        endif
     else
         if read_data
             if exists('s:tmru_mtime') && getftime(g:tmru_file) == s:tmru_mtime
                 let read_data = 0
             endif
-        elseif !exists("g:TMRU") || !exists("g:TMRU_METADATA")
+        elseif !exists("g:TMRU")
             let read_data = 1
         endif
         if read_data
             let data = tlib#persistent#Get(g:tmru_file)
             let g:TMRU = get(data, 'tmru', '')
-            let g:TMRU_METADATA = get(data, 'metadata', '')
             let s:tmru_mtime = getftime(g:tmru_file)
         endif
     endif
     let mru = split(g:TMRU, '\n')
-    if empty(g:TMRU_METADATA)
-        let g:TMRU_METADATA = join(repeat(['{}'], len(mru)), "\n")
-    endif
-    let metadata = map(split(g:TMRU_METADATA, '\n'), 'eval(v:val)')
-    " if !s:did_increase_sessions
-    "     for metaidx in range(len(metadata))
-    "         let metaitem = metadata[metaidx]
-    "         if type(metaitem) != 4
-    "             echohl ErrorMsg
-    "             echom "TMRU: metaitem is not a dictionary" string(metaitem)
-    "             echohl NONE
-    "             unlet metaitem
-    "             let metaitem = {}
-    "         endif
-    "         let metaitem.sessions = get(metaitem, 'sessions', -1) + 1
-    "         let metadata[metaidx] = metaitem
-    "     endfor
-    "     let s:did_increase_sessions = 1
-    "     " echom "DBG s:MruStore" string(metadata)
-    " endif
 
     " Canonicalize filename when using &shellslash (Windows)
     if exists('+shellslash')
@@ -240,19 +213,14 @@ function! s:MruRetrieve(...)
         endif
     endif
 
-    " make it relative to $HOME internally
-    " let mru = map(mru, 'fnamemodify(v:val, ":~")')
-
     " TLogVAR mru
-    return [mru, metadata]
+    return mru
 endf
 
 
-function! s:MruStore(mru, metadata, save)
+function! s:MruStore(mru, save)
     " TLogVAR a:save, g:tmru_file
     let g:TMRU = join(a:mru, "\n")
-    let metadata = a:metadata
-    let g:TMRU_METADATA = join(map(metadata, 'string(v:val)'), "\n")
     " TLogVAR g:TMRU
     " echom "DBG s:MruStore" g:tmru_file
     call s:BuildMenu(0)
@@ -262,17 +230,9 @@ function! s:MruStore(mru, metadata, save)
                 wviminfo
             endif
         else
-            call tlib#persistent#Save(g:tmru_file, {'tmru': g:TMRU, 'metadata': g:TMRU_METADATA})
+            call tlib#persistent#Save(g:tmru_file, {'tmru': g:TMRU})
         endif
     endif
-endf
-
-
-function! s:Metadata(filename, metadata) "{{{3
-    if !empty(a:filename)
-        let a:metadata.timestamp = localtime()
-    endif
-    return a:metadata
 endf
 
 
@@ -312,7 +272,7 @@ endf
 
 function! s:SelectMRU()
     " TLogDBG "SelectMRU#1"
-    let [tmru, metadata] = s:MruRetrieve()
+    let tmru = s:MruRetrieve()
     if !empty(tmru)
         " TLogDBG "SelectMRU#2"
         " TLogVAR tmru
@@ -332,8 +292,7 @@ function! s:SelectMRU()
                     let bi = index(tmru, bf)
                     " TLogVAR bi
                     call remove(tmru, bi)
-                    call remove(metadata, bi)
-                    call s:MruStore(tmru, metadata, 1)
+                    call s:MruStore(tmru, 1)
                 endif
             endfor
             return 1
@@ -344,28 +303,18 @@ endf
 
 
 function! s:EditMRU()
-    let [tmru, metadata] = s:MruRetrieve()
+    let tmru = s:MruRetrieve()
     let tmru1 = tlib#input#EditList('Edit MRU', tmru)
     if tmru != tmru1
-        let metadata1 = []
-        for fname in tmru1
-            let idx = index(tmru, fname)
-            if idx == -1
-                call add(metadata1, s:Metadata(fname, {}))
-            else
-                call add(metadata1, metadata[idx])
-            endif
-        endfor
-        call s:MruStore(tmru1, metadata1, 1)
+        call s:MruStore(tmru1, 1)
     endif
 endf
 
 
 function! s:AutoMRU(filename, event, props) "{{{3
-    " if &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != '' && filereadable(fnamemodify(a:filename, ":t"))
     " TLogVAR a:filename, a:event, a:props, &buftype
     if g:tmru_debug
-        let [mru, metadata] = s:MruRetrieve(a:props.load)
+        let mru = s:MruRetrieve(a:props.load)
         call tmru#DisplayUnreadableFiles(mru)
     endif
     if a:props.load
@@ -375,17 +324,16 @@ function! s:AutoMRU(filename, event, props) "{{{3
         if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
                     \ && (!g:tmru_check_disk || (filereadable(a:filename) && !isdirectory(a:filename)))
             if a:event == 'BufDelete'
-                let [mru, metadata] = s:MruRetrieve()
+                let mru = s:MruRetrieve()
                 let fidx = index(mru, a:filename)
                 " TLogVAR fidx
-                " let metadata[fidx].sessions = get(metadata[fidx], 'sessions', -1) + 1
-                call s:MruStore(mru, metadata, 0)
+                call s:MruStore(mru, 0)
             endif
             call s:MruRegister(a:filename, a:props.save)
         endif
     endif
     if g:tmru_debug
-        let [mru, metadata] = s:MruRetrieve()
+        let mru = s:MruRetrieve()
         call tmru#DisplayUnreadableFiles(mru)
     endif
     " TLogVAR "exit"
@@ -402,28 +350,24 @@ function! s:MruRegister(fname, save)
     if exists('b:tmruExclude') && b:tmruExclude
         return
     endif
-    let [tmru0, metadata0] = s:MruRetrieve()
+    let tmru0 = s:MruRetrieve()
     let tmru = copy(tmru0)
-    let metadata = copy(metadata0)
     let imru = index(tmru, fname, 0, g:tmru_ignorecase)
     if imru == -1 && len(tmru) >= g:tmruSize
         let imru = g:tmruSize - 1
     endif
-    let fmeta = {}
     if imru != -1
         call remove(tmru, imru)
-        call remove(metadata, imru)
     endif
     call insert(tmru, fname)
-    call insert(metadata, s:Metadata(fname, fmeta))
     if tmru != tmru0
-        call s:MruStore(tmru, metadata, a:save)
+        call s:MruStore(tmru, a:save)
     endif
 endf
 
 
 function! s:RemoveItem(world, selected) "{{{3
-    let [mru, metadata] = s:MruRetrieve()
+    let mru = s:MruRetrieve()
     " TLogVAR a:selected
     let idx = -1
     for filename in a:selected
@@ -434,10 +378,9 @@ function! s:RemoveItem(world, selected) "{{{3
         " TLogVAR filename, fidx
         if fidx >= 0
             call remove(mru, fidx)
-            call remove(metadata, fidx)
         endif
     endfor
-    call s:MruStore(mru, metadata, 1)
+    call s:MruStore(mru, 1)
     call a:world.ResetSelected()
     let a:world.base = copy(mru)
     if idx > len(mru)
@@ -455,7 +398,7 @@ endf
 " This checks that files are readable and removes any (canonicalized)
 " duplicates.
 function! s:CheckFilenames(world, selected) "{{{3
-    let [mru, metadata] = s:MruRetrieve()
+    let mru = s:MruRetrieve()
     let idx = len(mru) - 1
     let uniqdict = {} " used to remove duplicates
     let unreadable = 0
@@ -467,13 +410,11 @@ function! s:CheckFilenames(world, selected) "{{{3
         if !filereadable(file)
             " TLogVAR file
             call remove(mru, idx)
-            call remove(metadata, idx)
             let unreadable += 1
         elseif get(uniqdict, file)
             " file is a dupe
             let dupes += 1
             call remove(mru, idx)
-            call remove(metadata, idx)
         else
             " file is OK, add it to dictionary for dupe checking
             let uniqdict[file] = 1
@@ -485,7 +426,7 @@ function! s:CheckFilenames(world, selected) "{{{3
         let idx -= 1
     endwh
     if unreadable > 0 || dupes > 0 || normalized > 0
-        call s:MruStore(mru, metadata, 1)
+        call s:MruStore(mru, 1)
         echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate"
                     \ "files from mru list, and normalized" normalized "entries."
     endif
@@ -504,6 +445,7 @@ augroup tmru
     unlet! s:event s:props
 augroup END
 
+
 " Display the MRU list.
 command! TRecentlyUsedFiles call s:SelectMRU()
 
@@ -512,8 +454,4 @@ command! TMRU TRecentlyUsedFiles
 
 " Edit the MRU list.
 command! TRecentlyUsedFilesEdit call s:EditMRU()
-
-" :display: :{count}TMRUSession
-" Open files from a previous session. By default, use the last session.
-" command! -count TMRUSession call tmru#Session(s:MruRetrieve(), <count>)
 
