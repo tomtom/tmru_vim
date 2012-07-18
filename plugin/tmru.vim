@@ -507,6 +507,9 @@ augroup END
 " Display the MRU list.
 command! TRecentlyUsedFiles call s:SelectMRU()
 
+" Alias for |:TRecentlyUsedFiles|.
+command! TMRU TRecentlyUsedFiles
+
 " Edit the MRU list.
 command! TRecentlyUsedFilesEdit call s:EditMRU()
 
