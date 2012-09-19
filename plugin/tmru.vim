@@ -253,9 +253,11 @@ function! TmruEdit(filename) "{{{3
                 let file = tlib#arg#Ex(filename)
                 " TLogVAR file
                 exec 'edit '. file
+            catch /E325/
+                " swap file exists, let the user handle it
             catch
                 echohl error
-                echom v:errmsg
+                echom v:exception
                 echohl NONE
             endtry
             return 1
