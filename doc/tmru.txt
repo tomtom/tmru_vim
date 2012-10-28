@@ -45,26 +45,23 @@ Suggested maps (to be set in ~/.vimrc): >
 ========================================================================
 Contents~
 
-        g:tmruSize ................ |g:tmruSize|
         g:tmruMenu ................ |g:tmruMenu|
         g:tmruMenuSize ............ |g:tmruMenuSize|
         g:tmru_events ............. |g:tmru_events|
         g:tmru_update_viminfo ..... |g:tmru_update_viminfo|
         g:tmru_file ............... |g:tmru_file|
+        g:tmruSize ................ |g:tmruSize|
         g:tmruExclude ............. |g:tmruExclude|
         g:tmru_ignorecase ......... |g:tmru_ignorecase|
         g:tmru_check_disk ......... |g:tmru_check_disk|
         TmruEdit .................. |TmruEdit()|
         :TRecentlyUsedFiles ....... |:TRecentlyUsedFiles|
+        :TMRU ..................... |:TMRU|
         :TRecentlyUsedFilesEdit ... |:TRecentlyUsedFilesEdit|
 
 
 ========================================================================
 plugin/tmru.vim~
-
-                                                    *g:tmruSize*
-g:tmruSize                     (default: 50)
-    The number of recently edited files that are registered.
 
                                                     *g:tmruMenu*
 g:tmruMenu                     (default: 'File.M&RU.')
@@ -79,13 +76,13 @@ g:tmruMenuSize                 (default: 20)
 g:tmru_events                  (default: {...})
     A dictionary of {EVENT: [LOAD, SAVE]}. If LOAD or SAVE evaluates 
     to true, the mru list is load/saved for the respective |{event}|.
-    
+
     LOAD =  1: Load the external representation of the mru list
     LOAD =  0: Use the internal representation of the mru list
     SAVE =  1: Save the mru list to its external representation
     SAVE =  0: Save the mru list to its internal representation
     SAVE = -1: Ignore this event for saving.
-    
+
 
                                                     *g:tmru_update_viminfo*
 g:tmru_update_viminfo          (default: 0)
@@ -99,6 +96,11 @@ g:tmru_file                    (default: tlib#persistent#Filename('tmru', 'files
     Where to save the file list. The default value is only 
     effective, if 'viminfo' doesn't contain '!' -- in which case 
     the 'viminfo' will be used.
+
+                                                    *g:tmruSize*
+g:tmruSize                     (default: empty(g:tmru_file) ? 50 : 500)
+    The number of recently edited files that are registered.
+    The size is smaller if viminfo is used (see |g:tmru_file|).
 
                                                     *g:tmruExclude*
 g:tmruExclude                  (default: '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$')
@@ -123,6 +125,10 @@ TmruEdit(filename)
                                                     *:TRecentlyUsedFiles*
 :TRecentlyUsedFiles
     Display the MRU list.
+
+                                                    *:TMRU*
+:TMRU
+    Alias for |:TRecentlyUsedFiles|.
 
                                                     *:TRecentlyUsedFilesEdit*
 :TRecentlyUsedFilesEdit

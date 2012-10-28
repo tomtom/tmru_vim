@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-07-18.
-" @Revision:    517
+" @Revision:    600
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -15,12 +15,6 @@ if !exists('loaded_tlib') || loaded_tlib < 45
     finish
 endif
 let loaded_tmru = 12
-
-
-if !exists("g:tmruSize")
-    " The number of recently edited files that are registered.
-    let g:tmruSize = 50 "{{{2
-endif
 
 
 if !exists("g:tmruMenu")
@@ -101,13 +95,13 @@ endif
 
 
 if !exists("g:tmruExclude") "{{{2
-    " Ignore files matching this regexp.
-    " :read: let g:tmruExclude = '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$' "{{{2
     if exists('+shellslash')
         let s:PS = &shellslash ? '/' : '\\'
     else
         let s:PS = "/"
     endif
+    " Ignore files matching this regexp.
+    " :read: let g:tmruExclude = '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$' "{{{2
     let g:tmruExclude = s:PS . '[Tt]e\?mp' . s:PS
                 \ . '\|' . s:PS . '\(vimfiles\|\.vim\)' . s:PS . '\(doc\|cache\)' . s:PS
                 \ . '\|\.tmp$'
