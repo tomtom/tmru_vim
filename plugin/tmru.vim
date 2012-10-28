@@ -175,7 +175,8 @@ function! s:BuildMenu(initial) "{{{3
         if g:tmruMenuSize > 0 && len(mru) > g:tmruMenuSize
             let mru = mru[0 : g:tmruMenuSize - 1]
         endif
-        for e in mru
+        for item in mru
+            let e = item[0]
             let me = escape(e, '.\ ')
             exec 'amenu '. g:tmruMenu . me .' :call <SID>Edit('. string(e) .')<cr>'
         endfor
@@ -195,51 +196,83 @@ function! s:MruRetrieve(...)
         if !exists("g:TMRU")
             let g:TMRU = ''
         endif
+        let s:tmru_list = map(split(g:TMRU, '\n'), '[v:val, {}]')
     else
         if read_data
             if exists('s:tmru_mtime') && getftime(g:tmru_file) == s:tmru_mtime
                 let read_data = 0
             endif
-        elseif !exists("g:TMRU")
+        elseif !exists("s:tmru_list")
             let read_data = 1
         endif
         if read_data
             let data = tlib#persistent#Get(g:tmru_file)
-            let g:TMRU = get(data, 'tmru', '')
             let s:tmru_mtime = getftime(g:tmru_file)
+            if get(data, 'version', 0) == 0
+                let s:tmru_list = map(split(get(data, 'tmru', ''), '\n'), '[v:val, {}]')
+            else
+                let s:tmru_list = get(data, 'tmru', [])
+            endif
         endif
     endif
-    let mru = split(g:TMRU, '\n')
 
     " Canonicalize filename when using &shellslash (Windows)
     if exists('+shellslash')
         if &shellslash
-            let mru = map(mru, 'substitute(v:val, ''\\'', ''/'', ''g'')')
+            let s:tmru_list = map(s:tmru_list, '[substitute(v:val[0], ''\\'', ''/'', ''g''), val[1]]')
         else
-            let mru = map(mru, 'substitute(v:val, ''/'', ''\\'', ''g'')')
+            let s:tmru_list = map(s:tmru_list, '[substitute(v:val[0], ''/'', ''\\'', ''g''), val[1]]')
         endif
     endif
 
-    " TLogVAR mru
-    return mru
+    return s:tmru_list
 endf
 
 
 function! s:MruStore(mru, save)
     " TLogVAR a:save, g:tmru_file
-    let g:TMRU = join(a:mru, "\n")
+    let s:tmru_list = s:MruSort(a:mru)[0 : g:tmruSize]
     " TLogVAR g:TMRU
     " echom "DBG s:MruStore" g:tmru_file
     call s:BuildMenu(0)
     if a:save
         if empty(g:tmru_file)
             if g:tmru_update_viminfo
+                let g:TMRU = join(map(s:tmru_list, 'v:val[0]'), "\n")
                 wviminfo
             endif
         else
-            call tlib#persistent#Save(g:tmru_file, {'tmru': g:TMRU})
+            call tlib#persistent#Save(g:tmru_file, {'version': 1, 'tmru': s:tmru_list})
         endif
     endif
+endf
+
+
+function! s:MruSort(mru) "{{{3
+    let s:mru_pos = 0
+    call map(a:mru, 's:SetPos(v:val)')
+    unlet s:mru_pos
+    " TLogVAR a:mru
+    let mru = sort(a:mru, 's:MruSorter')
+    " TLogVAR mru
+    return mru
+endf
+
+
+function! s:SetPos(item) "{{{3
+    let a:item[1].pos = s:mru_pos
+    " TLogVAR a:item
+    let s:mru_pos += 1
+    return a:item
+endf
+
+
+function! s:MruSorter(i1, i2) "{{{3
+    let s1 = get(a:i1[1], 'sticky', 0)
+    let s2 = get(a:i2[1], 'sticky', 0)
+    let p1 = get(a:i1[1], 'pos')
+    let p2 = get(a:i2[1], 'pos')
+    return s1 == s2 ? (p1 == p2 ? 0 : p1 > p2 ? 1 : -1) : s1 > s2 ? -1 : 1
 endf
 
 
@@ -288,7 +321,7 @@ function! s:SelectMRU()
         let world = tlib#World#New(g:tmru_world)
         call world.Set_display_format('filename')
         " TLogDBG "SelectMRU#3"
-        let world.base = copy(tmru)
+        let world.base = s:GetFilenames(tmru)
         " TLogDBG "SelectMRU#4"
         " let bs    = tlib#input#List('m', 'Select file', copy(tmru), g:tmru_handlers)
         let bs    = tlib#input#ListW(world)
@@ -298,7 +331,7 @@ function! s:SelectMRU()
             for bf in bs
                 " TLogVAR bf
                 if !TmruEdit(bf)
-                    let bi = index(tmru, bf)
+                    let bi = s:FindIndex(tmru, bf)
                     " TLogVAR bi
                     call remove(tmru, bi)
                     call s:MruStore(tmru, 1)
@@ -311,10 +344,38 @@ function! s:SelectMRU()
 endf
 
 
+function! s:GetFilenames(mru)
+    return map(copy(a:mru), 'v:val[0]')
+endf
+
+
+function! s:AList2Dict(mru)
+    let props = {}
+    for item in a:mru
+        let props[item[0]] = item[1]
+    endfor
+endf
+
+
+function! s:FindIndex(mru, filename)
+    let i = 0
+    for item in a:mru
+        if item[0] == a:filename
+            return i
+        endif
+        let i += 1
+    endif
+    return -1
+endf
+
+
 function! s:EditMRU()
     let tmru = s:MruRetrieve()
-    let tmru1 = tlib#input#EditList('Edit MRU', tmru)
-    if tmru != tmru1
+    let filenames0 = s:GetFilenames(tmru)
+    let properties = s:AList2Dict(tmru)
+    let filenames1 = tlib#input#EditList('Edit MRU', s:GetFilenames(filenames0))
+    if filenames0 != filenames1
+        let tmru1 = map(filenames1, '[v:val, get(properties, v:val, {})]')
         call s:MruStore(tmru1, 1)
     endif
 endf
@@ -324,7 +385,7 @@ function! s:AutoMRU(filename, event, props) "{{{3
     " TLogVAR a:filename, a:event, a:props, &buftype
     if g:tmru_debug
         let mru = s:MruRetrieve(a:props.load)
-        call tmru#DisplayUnreadableFiles(mru)
+        call tmru#DisplayUnreadableFiles(s:GetFilenames(mru))
     endif
     if a:props.load
         call s:MruRetrieve(a:props.load)
@@ -336,6 +397,7 @@ function! s:AutoMRU(filename, event, props) "{{{3
                 let mru = s:MruRetrieve()
                 let fidx = index(mru, a:filename)
                 " TLogVAR fidx
+                call remove(mru, fidx)
                 call s:MruStore(mru, 0)
             endif
             call s:MruRegister(a:filename, a:props.save)
@@ -343,7 +405,7 @@ function! s:AutoMRU(filename, event, props) "{{{3
     endif
     if g:tmru_debug
         let mru = s:MruRetrieve()
-        call tmru#DisplayUnreadableFiles(mru)
+        call tmru#DisplayUnreadableFiles(s:GetFilenames(mru))
     endif
     " TLogVAR "exit"
 endf
@@ -361,26 +423,37 @@ function! s:MruRegister(fname, save)
     endif
     let tmru0 = s:MruRetrieve()
     let tmru = copy(tmru0)
-    let imru = index(tmru, fname, 0, g:tmru_ignorecase)
-    if imru == -1 && len(tmru) >= g:tmruSize
-        let imru = g:tmruSize - 1
+    let filenames = s:GetFilenames(tmru)
+    let imru = index(filenames, fname, 0, g:tmru_ignorecase)
+    if imru == -1
+        let item = [fname, {}]
+    else
+        let item = remove(tmru, imru)
     endif
-    if imru != -1
-        call remove(tmru, imru)
-    endif
-    call insert(tmru, fname)
+    " TLogVAR imru, item
+    call insert(tmru, [fname, item[1]])
     if tmru != tmru0
+        " TLogVAR tmru
+        if g:tmru_debug
+            let filenames = s:GetFilenames(tmru)
+            TLogVAR a:fname, index(filenames,a:fname)
+        endif
         call s:MruStore(tmru, a:save)
+        if g:tmru_debug
+            let filenames = s:GetFilenames(s:MruRetrieve())
+            TLogVAR index(filenames,a:fname)
+        endif
     endif
 endf
 
 
 function! s:RemoveItem(world, selected) "{{{3
     let mru = s:MruRetrieve()
+    let filenames = s:GetFilenames(mru)
     " TLogVAR a:selected
     let idx = -1
     for filename in a:selected
-        let fidx = index(mru, filename)
+        let fidx = index(filenames, filename)
         if idx < 0
             let idx = fidx
         endif
@@ -391,7 +464,7 @@ function! s:RemoveItem(world, selected) "{{{3
     endfor
     call s:MruStore(mru, 1)
     call a:world.ResetSelected()
-    let a:world.base = copy(mru)
+    let a:world.base = s:GetFilenames(mru)
     if idx > len(mru)
         let a:world.idx = len(mru)
     elseif idx >= 0
@@ -408,13 +481,14 @@ endf
 " duplicates.
 function! s:CheckFilenames(world, selected) "{{{3
     let mru = s:MruRetrieve()
+    let filenames = s:GetFilenames(mru)
     let idx = len(mru) - 1
     let uniqdict = {} " used to remove duplicates
     let unreadable = 0
     let dupes = 0
     let normalized = 0
     while idx > 0
-        let file_p = fnamemodify(mru[idx], ':p')
+        let file_p = fnamemodify(filenames[idx], ':p')
         let file = substitute(substitute(file_p, '\\\+', '\', 'g'), '/\+', '/', 'g')
         if !filereadable(file)
             " TLogVAR file
@@ -429,7 +503,7 @@ function! s:CheckFilenames(world, selected) "{{{3
             let uniqdict[file] = 1
             if file_p != file
                 let normalized += 1
-                let mru[idx] = file
+                let mru[idx][0] = file
             endif
         endif
         let idx -= 1
@@ -439,7 +513,7 @@ function! s:CheckFilenames(world, selected) "{{{3
         echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate"
                     \ "files from mru list, and normalized" normalized "entries."
     endif
-    let a:world.base = copy(mru)
+    let a:world.base = s:GetFilenames(mru)
     let a:world.state = 'reset'
     return a:world
 endf
