@@ -147,7 +147,13 @@ if !exists('g:tmru_world') "{{{2
                 \ 'allow_suspend': 0,
                 \ 'query': 'Select file',
                 \ }
-                " \ 'filter_format': 'fnamemodify(%s, ":t")',
+    " \ 'filter_format': 'fnamemodify(%s, ":t")',
+    if !empty(g:tmru_file)
+        call add(g:tmru_world.key_handlers,
+                    \ {'key': 16, 'agent': s:SNR() .'TogglePersistent',   'key_name': '<c-p>', 'help': 'Toggle a file''s persistent mark'})
+        call add(g:tmru_world.key_handlers,
+                    \ {'key': 21, 'agent': s:SNR() .'UnsetPersistent',   'key_name': '<c-u>', 'help': 'Unset a file''s persistent mark'})
+    endif
 endif
 
 
@@ -444,6 +450,50 @@ function! s:MruRegister(fname, save)
             TLogVAR index(filenames,a:fname)
         endif
     endif
+endf
+
+
+function! s:UnsetPersistent(world, selected) "{{{3
+    let mru = s:MruRetrieve()
+    let filenames = s:GetFilenames(mru)
+    for filename in a:selected
+        let fidx = index(filenames, filename)
+        " TLogVAR filename, fidx
+        if fidx >= 0
+            let mru[fidx][1]['sticky'] = 0
+        endif
+    endfor
+    call s:MruStore(mru, 1)
+    let a:world.base = s:GetFilenames(mru)
+    let a:world.state = 'reset'
+    return a:world
+endf
+
+
+function! s:TogglePersistent(world, selected) "{{{3
+    let mru = s:MruRetrieve()
+    let filenames = s:GetFilenames(mru)
+    let msgs = []
+    for filename in a:selected
+        let fidx = index(filenames, filename)
+        " TLogVAR filename, fidx
+        if fidx >= 0
+            let props = mru[fidx][1]
+            let props['sticky'] = !get(props, 'sticky', 0)
+            call add(msgs, printf('Mark %ssticky: %s', props.sticky ? '' : 'not ', filename))
+            let mru[fidx][1] = props
+        endif
+    endfor
+    if !empty(msgs)
+        echom join(msgs, "\n")
+        echohl MoreMsg
+        call input("Press ENTER to continue")
+        echohl NONE
+    endif
+    call s:MruStore(mru, 1)
+    let a:world.base = s:GetFilenames(mru)
+    let a:world.state = 'reset'
+    return a:world
 endf
 
 
