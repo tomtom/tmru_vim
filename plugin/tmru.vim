@@ -93,6 +93,13 @@ if !exists("g:tmru_file")
 endif
 
 
+if !exists("g:tmruSize")
+    " The number of recently edited files that are registered.
+    " The size is smaller if viminfo is used (see |g:tmru_file|).
+    let g:tmruSize = empty(g:tmru_file) ? 50 : 500 "{{{2
+endif
+
+
 if !exists("g:tmruExclude") "{{{2
     " Ignore files matching this regexp.
     " :read: let g:tmruExclude = '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$' "{{{2
