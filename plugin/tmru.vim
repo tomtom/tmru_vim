@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-07-18.
-" @Revision:    600
+" @Revision:    601
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -219,9 +219,9 @@ function! s:MruRetrieve(...)
     " Canonicalize filename when using &shellslash (Windows)
     if exists('+shellslash')
         if &shellslash
-            let s:tmru_list = map(s:tmru_list, '[substitute(v:val[0], ''\\'', ''/'', ''g''), val[1]]')
+            let s:tmru_list = map(s:tmru_list, '[substitute(v:val[0], ''\\'', ''/'', ''g''), v:val[1]]')
         else
-            let s:tmru_list = map(s:tmru_list, '[substitute(v:val[0], ''/'', ''\\'', ''g''), val[1]]')
+            let s:tmru_list = map(s:tmru_list, '[substitute(v:val[0], ''/'', ''\\'', ''g''), v:val[1]]')
         endif
     endif
 
