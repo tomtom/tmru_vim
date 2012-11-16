@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-15.
-" @Revision:    627
+" @Revision:    673
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -30,39 +30,12 @@ if !exists("g:tmruMenuSize")
 endif
 
 
-if !exists("g:tmru_events")
-    " A dictionary of {EVENT: [LOAD, SAVE]}. If LOAD or SAVE evaluates 
-    " to true, the mru list is load/saved for the respective |{event}|.
-    "
-    " LOAD =  1: Load the external representation of the mru list
-    " LOAD =  0: Use the internal representation of the mru list
-    " SAVE =  1: Save the mru list to its external representation
-    " SAVE =  0: Save the mru list to its internal representation
-    " SAVE = -1: Ignore this event for saving.
-    "
-    " :read: let g:tmru_events = {...} "{{{2
-    if exists('g:tmruEvents')
-        if type(g:tmruEvents) == 1
-            let g:tmru_events = {}
-            for s:ev in g:tmruEvents
-                let g:tmru_events[s:ev] = {'load': 0, 'save': 1}
-            endfor
-            unlet s:ev
-        else
-            let g:tmru_events = map(g:tmruEvents, "{'load': 0, 'save': v:val}")
-        endif
-        unlet g:tmruEvents
-    else
-        let g:tmru_events = {
-                    \ 'FocusGained':  {'load': 1, 'save': -1},
-                    \ 'FocusLost':    {'load': 0, 'save': 1},
-                    \ 'BufWritePost': {'load': 0, 'save': 1},
-                    \ 'BufReadPost':  {'load': 0, 'save': 1}, 
-                    \ 'BufWinEnter':  {'load': 0, 'save': 1},
-                    \ 'BufEnter':     {'load': 0, 'save': 0},
-                    \ 'BufDelete':    {'load': 0, 'save': 0}
-                    \ }
-    endif
+if !exists('g:tmru_single_child_mode')
+    " If true, work as if only one instance of vim is running. This 
+    " results in reading and writing the mru list less frequently 
+    " from/to disk. The list won't be synchronized across multiple 
+    " instances of vim running in parallel.
+    let g:tmru_single_child_mode = 0   "{{{2
 endif
 
 
@@ -71,7 +44,42 @@ if !exists('g:tmru_update_viminfo')
     " |g:tmru_events|.
     " This is useful if 'viminfo' includes '!' and |g:tmru_file| is 
     " empty and you run multiple instances of vim.
-    let g:tmru_update_viminfo = 0   "{{{2
+    let g:tmru_update_viminfo = !g:tmru_single_child_mode   "{{{2
+endif
+
+
+if !exists("g:tmru_events")
+    " A dictionary of {EVENT: ACTION = BOOL, ...}, where ACTION is one 
+    " of the following:
+    "
+    " LOAD ....... Load the external representation from disk
+    " REGISTER ... Register the current buffer
+    " SAVE ....... Save mru list to disk
+    "
+    " :read: let g:tmru_events = {...} "{{{2
+    if exists('g:tmruEvents')  " backwards compatibility
+        if type(g:tmruEvents) == 1
+            let g:tmru_events = {}
+            for s:ev in g:tmruEvents
+                let g:tmru_events[s:ev] = {'load': 0, 'register': 1, 'save': 1}
+            endfor
+            unlet s:ev
+        else
+            let g:tmru_events = map(g:tmruEvents, "{'load': 0, 'register': 1, 'save': v:val}")
+        endif
+        unlet g:tmruEvents
+    else
+        let g:tmru_events = {
+                    \ 'VimLeave':     {'load': 0, 'register': 0, 'save': g:tmru_single_child_mode},
+                    \ 'FocusGained':  {'load': 1, 'register': 0, 'save': !g:tmru_single_child_mode},
+                    \ 'FocusLost':    {'load': 0, 'register': 0, 'save': !g:tmru_single_child_mode},
+                    \ 'BufWritePost': {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode},
+                    \ 'BufReadPost':  {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode}, 
+                    \ 'BufWinEnter':  {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode},
+                    \ 'BufEnter':     {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode},
+                    \ 'BufDelete':    {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode}
+                    \ }
+    endif
 endif
 
 
@@ -187,6 +195,7 @@ endf
 " s:MruRetrieve(?read_data=0)
 function! s:MruRetrieve(...)
     let read_data = a:0 >= 1 ? a:1 : 0
+    " TLogVAR read_data
     if empty(g:tmru_file)
         if read_data && exists("g:TMRU")
             if g:tmru_update_viminfo
@@ -203,7 +212,7 @@ function! s:MruRetrieve(...)
             if exists('s:tmru_mtime') && getftime(g:tmru_file) == s:tmru_mtime
                 let read_data = 0
             endif
-        elseif !exists("s:tmru_list")
+        elseif !exists('s:tmru_mtime') || getftime(g:tmru_file) != s:tmru_mtime
             let read_data = 1
         endif
         if read_data
@@ -216,6 +225,9 @@ function! s:MruRetrieve(...)
                 let s:tmru_list = get(data, 'tmru', [])
             endif
         endif
+    endif
+    if read_data
+        let s:last_auto_filename = ''
     endif
     return s:tmru_list
 endf
@@ -234,13 +246,14 @@ function! s:NormalizeFilename(filename) "{{{3
 endf
 
 
-function! s:MruStore(mru, save)
-    " TLogVAR a:save, g:tmru_file
-    let s:tmru_list = s:MruSort(a:mru)[0 : g:tmruSize]
-    " TLogVAR g:TMRU
-    " echom "DBG s:MruStore" g:tmru_file
-    call s:BuildMenu(0)
-    if a:save
+function! s:MruStore(mru, props)
+    " TLogVAR g:tmru_file
+    let tmru_list = s:MruSort(a:mru)[0 : g:tmruSize]
+    if get(a:props, 'save', 1) && tmru_list != s:tmru_list
+        let s:tmru_list = tmru_list
+        " TLogVAR g:TMRU
+        " TLogVAR g:tmru_file
+        call s:BuildMenu(0)
         if empty(g:tmru_file)
             if g:tmru_update_viminfo
                 let g:TMRU = join(map(s:tmru_list, 'v:val[0]'), "\n")
@@ -248,6 +261,7 @@ function! s:MruStore(mru, save)
             endif
         else
             call tlib#persistent#Save(g:tmru_file, {'version': 1, 'tmru': s:tmru_list})
+            let s:tmru_mtime = getftime(g:tmru_file)
         endif
     endif
 endf
@@ -339,7 +353,7 @@ function! s:SelectMRU()
                     let bi = s:FindIndex(tmru, bf)
                     " TLogVAR bi
                     call remove(tmru, bi)
-                    call s:MruStore(tmru, 1)
+                    call s:MruStore(tmru, {})
                 endif
             endfor
             return 1
@@ -381,24 +395,33 @@ function! s:EditMRU()
     let filenames1 = tlib#input#EditList('Edit MRU', s:GetFilenames(filenames0))
     if filenames0 != filenames1
         let tmru1 = map(filenames1, '[v:val, get(properties, v:val, {})]')
-        call s:MruStore(tmru1, 1)
+        call s:MruStore(tmru1, {})
     endif
 endf
 
 
-function! s:AutoMRU(filename, event, props) "{{{3
+let s:last_auto_filename = ''
+
+function! s:RegisterFile(filename, event, props) "{{{3
     " TLogVAR a:filename, a:event, a:props, &buftype
-    if g:tmru_debug
-        let mru = s:MruRetrieve(a:props.load)
-        call tmru#DisplayUnreadableFiles(s:GetFilenames(mru))
+    if empty(a:filename)
+        return
     endif
     if a:props.load
         call s:MruRetrieve(a:props.load)
     endif
-    if a:props.save >= 0
-        if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
-                    \ && (!g:tmru_check_disk || (filereadable(a:filename) && !isdirectory(a:filename)))
-            call s:MruRegister(a:filename, a:props.save)
+    if g:tmru_debug
+        let mru = s:MruRetrieve()
+        call tmru#DisplayUnreadableFiles(s:GetFilenames(mru))
+    endif
+    if get(a:props, 'register', 1) && s:last_auto_filename != a:filename
+        " TLogVAR "Consider", a:filename
+        if &buflisted && &buftype !~ 'nofile' &&
+                    \ (g:tmru_check_disk ?
+                    \     (filereadable(a:filename) && !isdirectory(a:filename)) :
+                    \     fnamemodify(a:filename, ":t") != '')
+            let s:last_auto_filename = a:filename
+            call s:MruRegister(a:filename, a:props)
         endif
     endif
     if g:tmru_debug
@@ -414,8 +437,8 @@ function! s:FilenameIndex(filenames, filename) "{{{3
 endf
 
 
-function! s:MruRegister(filename, save)
-    " TLogVAR a:filename, a:save
+function! s:MruRegister(filename, props)
+    " TLogVAR a:filename
     let filename = s:NormalizeFilename(a:filename)
     if g:tmruExclude != '' && filename =~ g:tmruExclude
         if &verbose | echom "tmru: ignore file" filename | end
@@ -443,7 +466,7 @@ function! s:MruRegister(filename, save)
                 let filenames = s:GetFilenames(tmru)
                 " TLogVAR filename, index(filenames,filename)
             endif
-            call s:MruStore(tmru, a:save)
+            call s:MruStore(tmru, a:props)
             if g:tmru_debug
                 let filenames = s:GetFilenames(s:MruRetrieve())
                 " TLogVAR index(filenames,filename)
@@ -463,7 +486,7 @@ function! s:UnsetPersistent(world, selected) "{{{3
             let mru[fidx][1]['sticky'] = 0
         endif
     endfor
-    call s:MruStore(mru, 1)
+    call s:MruStore(mru, {})
     let a:world.base = s:GetFilenames(mru)
     let a:world.state = 'reset'
     return a:world
@@ -490,7 +513,7 @@ function! s:TogglePersistent(world, selected) "{{{3
         call input("Press ENTER to continue")
         echohl NONE
     endif
-    call s:MruStore(mru, 1)
+    call s:MruStore(mru, {})
     let a:world.base = s:GetFilenames(mru)
     let a:world.state = 'reset'
     return a:world
@@ -512,7 +535,7 @@ function! s:RemoveItem(world, selected) "{{{3
             call remove(mru, fidx)
         endif
     endfor
-    call s:MruStore(mru, 1)
+    call s:MruStore(mru, {})
     call a:world.ResetSelected()
     let a:world.base = s:GetFilenames(mru)
     if idx > len(mru)
@@ -559,7 +582,7 @@ function! s:CheckFilenames(world, selected) "{{{3
         let idx -= 1
     endwh
     if unreadable > 0 || dupes > 0 || normalized > 0
-        call s:MruStore(mru, 1)
+        call s:MruStore(mru, {})
         echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate"
                     \ "files from mru list, and normalized" normalized "entries."
     endif
@@ -573,7 +596,7 @@ augroup tmru
     autocmd!
     autocmd VimEnter * call s:BuildMenu(1)
     for [s:event, s:props] in items(g:tmru_events)
-        exec 'autocmd '. s:event .' * call s:AutoMRU(expand("<afile>:p"), '. string(s:event) .', '. string(s:props) .')'
+        exec 'autocmd '. s:event .' * call s:RegisterFile(expand("<afile>:p"), '. string(s:event) .', '. string(s:props) .')'
     endfor
     unlet! s:event s:props
 augroup END
