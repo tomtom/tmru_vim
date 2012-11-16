@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-07-18.
-" @Revision:    601
+" @Last Change: 2012-11-15.
+" @Revision:    627
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -190,6 +190,7 @@ function! s:MruRetrieve(...)
     if empty(g:tmru_file)
         if read_data && exists("g:TMRU")
             if g:tmru_update_viminfo
+                " TLogVAR read_data, g:tmru_update_viminfo
                 rviminfo
             endif
         endif
@@ -206,6 +207,7 @@ function! s:MruRetrieve(...)
             let read_data = 1
         endif
         if read_data
+            " TLogVAR read_data, g:tmru_file
             let data = tlib#persistent#Get(g:tmru_file)
             let s:tmru_mtime = getftime(g:tmru_file)
             if get(data, 'version', 0) == 0
@@ -215,17 +217,20 @@ function! s:MruRetrieve(...)
             endif
         endif
     endif
+    return s:tmru_list
+endf
 
-    " Canonicalize filename when using &shellslash (Windows)
+
+function! s:NormalizeFilename(filename) "{{{3
+    let filename = fnamemodify(a:filename, ':p')
     if exists('+shellslash')
         if &shellslash
-            let s:tmru_list = map(s:tmru_list, '[substitute(v:val[0], ''\\'', ''/'', ''g''), v:val[1]]')
+            let filename = substitute(filename, '\\', '/', 'g')
         else
-            let s:tmru_list = map(s:tmru_list, '[substitute(v:val[0], ''/'', ''\\'', ''g''), v:val[1]]')
+            let filename = substitute(filename, '/', '\\', 'g')
         endif
     endif
-
-    return s:tmru_list
+    return filename
 endf
 
 
@@ -393,13 +398,6 @@ function! s:AutoMRU(filename, event, props) "{{{3
     if a:props.save >= 0
         if &buflisted && &buftype !~ 'nofile' && fnamemodify(a:filename, ":t") != ''
                     \ && (!g:tmru_check_disk || (filereadable(a:filename) && !isdirectory(a:filename)))
-            if a:event == 'BufDelete'
-                let mru = s:MruRetrieve()
-                let fidx = index(mru, a:filename)
-                " TLogVAR fidx
-                call remove(mru, fidx)
-                call s:MruStore(mru, 0)
-            endif
             call s:MruRegister(a:filename, a:props.save)
         endif
     endif
@@ -411,11 +409,16 @@ function! s:AutoMRU(filename, event, props) "{{{3
 endf
 
 
-function! s:MruRegister(fname, save)
-    let fname = fnamemodify(a:fname, ':p')
-    " TLogVAR a:fname, a:save, fname
-    if g:tmruExclude != '' && fname =~ g:tmruExclude
-        if &verbose | echom "tmru: ignore file" fname | end
+function! s:FilenameIndex(filenames, filename) "{{{3
+    return index(a:filenames, a:filename, 0, g:tmru_ignorecase)
+endf
+
+
+function! s:MruRegister(filename, save)
+    " TLogVAR a:filename, a:save
+    let filename = s:NormalizeFilename(a:filename)
+    if g:tmruExclude != '' && filename =~ g:tmruExclude
+        if &verbose | echom "tmru: ignore file" filename | end
         return
     endif
     if exists('b:tmruExclude') && b:tmruExclude
@@ -424,24 +427,27 @@ function! s:MruRegister(fname, save)
     let tmru0 = s:MruRetrieve()
     let tmru = copy(tmru0)
     let filenames = s:GetFilenames(tmru)
-    let imru = index(filenames, fname, 0, g:tmru_ignorecase)
-    if imru == -1
-        let item = [fname, {}]
-    else
-        let item = remove(tmru, imru)
-    endif
-    " TLogVAR imru, item
-    call insert(tmru, [fname, item[1]])
-    if tmru != tmru0
-        " TLogVAR tmru
-        if g:tmru_debug
-            let filenames = s:GetFilenames(tmru)
-            TLogVAR a:fname, index(filenames,a:fname)
+    let imru = s:FilenameIndex(filenames, filename)
+    " TLogVAR imru
+    if imru != 0
+        if imru == -1
+            let item = [filename, {}]
+        else
+            let item = remove(tmru, imru)
         endif
-        call s:MruStore(tmru, a:save)
-        if g:tmru_debug
-            let filenames = s:GetFilenames(s:MruRetrieve())
-            TLogVAR index(filenames,a:fname)
+        " TLogVAR imru, item
+        call insert(tmru, item)
+        if tmru != tmru0
+            " TLogVAR tmru
+            if g:tmru_debug
+                let filenames = s:GetFilenames(tmru)
+                " TLogVAR filename, index(filenames,filename)
+            endif
+            call s:MruStore(tmru, a:save)
+            if g:tmru_debug
+                let filenames = s:GetFilenames(s:MruRetrieve())
+                " TLogVAR index(filenames,filename)
+            endif
         endif
     endif
 endf
@@ -451,7 +457,7 @@ function! s:UnsetPersistent(world, selected) "{{{3
     let mru = s:MruRetrieve()
     let filenames = s:GetFilenames(mru)
     for filename in a:selected
-        let fidx = index(filenames, filename)
+        let fidx = s:FilenameIndex(filenames, filename)
         " TLogVAR filename, fidx
         if fidx >= 0
             let mru[fidx][1]['sticky'] = 0
@@ -469,7 +475,7 @@ function! s:TogglePersistent(world, selected) "{{{3
     let filenames = s:GetFilenames(mru)
     let msgs = []
     for filename in a:selected
-        let fidx = index(filenames, filename)
+        let fidx = s:FilenameIndex(filenames, filename)
         " TLogVAR filename, fidx
         if fidx >= 0
             let props = mru[fidx][1]
@@ -497,7 +503,7 @@ function! s:RemoveItem(world, selected) "{{{3
     " TLogVAR a:selected
     let idx = -1
     for filename in a:selected
-        let fidx = index(filenames, filename)
+        let fidx = s:FilenameIndex(filenames, filename)
         if idx < 0
             let idx = fidx
         endif
