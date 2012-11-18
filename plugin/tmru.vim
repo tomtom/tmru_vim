@@ -4,14 +4,14 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-15.
-" @Revision:    673
+" @Revision:    678
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
     finish
 endif
-if !exists('loaded_tlib') || loaded_tlib < 45
-    echoerr "tlib >= 0.45 is required"
+if !exists('loaded_tlib') || loaded_tlib < 104
+    echoerr "tlib >= 1.04 is required"
     finish
 endif
 let loaded_tmru = 12
@@ -341,6 +341,14 @@ function! s:SelectMRU()
         call world.Set_display_format('filename')
         " TLogDBG "SelectMRU#3"
         let world.base = s:GetFilenames(tmru)
+        let world.filename_indicators = {}
+        for item in tmru
+            let [filename, props] = item
+            if get(props, 'sticky', 0)
+                let world.filename_indicators[filename] = "s"
+                " TLogVAR item, props
+            endif
+        endfor
         " TLogDBG "SelectMRU#4"
         " let bs    = tlib#input#List('m', 'Select file', copy(tmru), g:tmru_handlers)
         let bs    = tlib#input#ListW(world)
