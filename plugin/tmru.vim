@@ -344,24 +344,17 @@ endf
 
 function! s:SelectMRU()
     " TLogDBG "SelectMRU#1"
-    let tmru = s:MruRetrieve()
-    if !empty(tmru)
+    let mru = s:MruRetrieve()
+    if !empty(mru)
         " TLogDBG "SelectMRU#2"
-        " TLogVAR tmru
+        " TLogVAR mru
         let world = tlib#World#New(g:tmru_world)
         call world.Set_display_format('filename')
         " TLogDBG "SelectMRU#3"
-        let world.base = s:GetFilenames(tmru)
-        let world.filename_indicators = {}
-        for item in tmru
-            let [filename, props] = item
-            if get(props, 'sticky', 0)
-                let world.filename_indicators[filename] = "s"
-                " TLogVAR item, props
-            endif
-        endfor
+        let world.base = s:GetFilenames(mru)
+        call s:SetFilenameIndicators(world, mru)
         " TLogDBG "SelectMRU#4"
-        " let bs    = tlib#input#List('m', 'Select file', copy(tmru), g:tmru_handlers)
+        " let bs    = tlib#input#List('m', 'Select file', copy(mru), g:tmru_handlers)
         let bs    = tlib#input#ListW(world)
         " TLogDBG "SelectMRU#5"
         " TLogVAR bs
@@ -369,16 +362,28 @@ function! s:SelectMRU()
             for bf in bs
                 " TLogVAR bf
                 if !TmruEdit(bf)
-                    let bi = s:FindIndex(tmru, bf)
+                    let bi = s:FindIndex(mru, bf)
                     " TLogVAR bi
-                    call remove(tmru, bi)
-                    call s:MruStore(tmru, {})
+                    call remove(mru, bi)
+                    call s:MruStore(mru, {})
                 endif
             endfor
             return 1
         endif
     endif
     return 0
+endf
+
+
+function! s:SetFilenameIndicators(world, mru) "{{{3
+    let a:world.filename_indicators = {}
+    for item in a:mru
+        let [filename, props] = item
+        if get(props, 'sticky', 0)
+            let a:world.filename_indicators[filename] = "s"
+            " TLogVAR item, props
+        endif
+    endfor
 endf
 
 
@@ -408,13 +413,13 @@ endf
 
 
 function! s:EditMRU()
-    let tmru = s:MruRetrieve()
-    let filenames0 = s:GetFilenames(tmru)
-    let properties = s:AList2Dict(tmru)
+    let mru = s:MruRetrieve()
+    let filenames0 = s:GetFilenames(mru)
+    let properties = s:AList2Dict(mru)
     let filenames1 = tlib#input#EditList('Edit MRU', s:GetFilenames(filenames0))
     if filenames0 != filenames1
-        let tmru1 = map(filenames1, '[v:val, get(properties, v:val, {})]')
-        call s:MruStore(tmru1, {})
+        let mru1 = map(filenames1, '[v:val, get(properties, v:val, {})]')
+        call s:MruStore(mru1, {})
     endif
 endf
 
@@ -466,26 +471,26 @@ function! s:MruRegister(filename, props)
     if exists('b:tmruExclude') && b:tmruExclude
         return
     endif
-    let tmru0 = s:MruRetrieve()
-    let tmru = copy(tmru0)
-    let filenames = s:GetFilenames(tmru)
+    let mru0 = s:MruRetrieve()
+    let mru = copy(mru0)
+    let filenames = s:GetFilenames(mru)
     let imru = s:FilenameIndex(filenames, filename)
     " TLogVAR imru
     if imru != 0
         if imru == -1
             let item = [filename, {}]
         else
-            let item = remove(tmru, imru)
+            let item = remove(mru, imru)
         endif
         " TLogVAR imru, item
-        call insert(tmru, item)
-        if tmru != tmru0
-            " TLogVAR tmru
+        call insert(mru, item)
+        if mru != mru0
+            " TLogVAR mru
             if g:tmru_debug
-                let filenames = s:GetFilenames(tmru)
+                let filenames = s:GetFilenames(mru)
                 " TLogVAR filename, index(filenames,filename)
             endif
-            call s:MruStore(tmru, a:props)
+            call s:MruStore(mru, a:props)
             if g:tmru_debug
                 let filenames = s:GetFilenames(s:MruRetrieve())
                 " TLogVAR index(filenames,filename)
@@ -507,6 +512,7 @@ function! s:UnsetPersistent(world, selected) "{{{3
     endfor
     call s:MruStore(mru, {})
     let a:world.base = s:GetFilenames(mru)
+    call s:SetFilenameIndicators(a:world, mru)
     let a:world.state = 'reset'
     return a:world
 endf
@@ -534,6 +540,7 @@ function! s:TogglePersistent(world, selected) "{{{3
     endif
     call s:MruStore(mru, {})
     let a:world.base = s:GetFilenames(mru)
+    call s:SetFilenameIndicators(a:world, mru)
     let a:world.state = 'reset'
     return a:world
 endf
