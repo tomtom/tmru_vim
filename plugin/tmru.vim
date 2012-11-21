@@ -30,6 +30,12 @@ if !exists("g:tmruMenuSize")
 endif
 
 
+if !exists('g:tmru_drop')
+    " If true, use |:drop| to edit loaded buffers.
+    let g:tmru_drop = 1   "{{{2
+endif
+
+
 if !exists('g:tmru_single_child_mode')
     " If true, work as if only one instance of vim is running. This 
     " results in reading and writing the mru list less frequently 
@@ -140,6 +146,7 @@ if !exists('g:tmru_world') "{{{2
                 \ {'key': 3,  'agent': 'tlib#agent#CopyItems',        'key_name': '<c-c>', 'help': 'Copy file name(s)'},
                 \ {'key': 6,  'agent': s:SNR() .'CheckFilenames',     'key_name': '<c-f>', 'help': 'Check file name(s)'},
                 \ {'key': "\<del>", 'agent': s:SNR() .'RemoveItem',   'key_name': '<del>', 'help': 'Remove file name(s)'},
+                \ {'key': "\<c-cr>", 'agent': s:SNR() .'Drop',        'key_name': '<c-cr>', 'help': 'Drop to file name'},
                 \ {'key': 9,  'agent': 'tlib#agent#ShowInfo',         'key_name': '<c-i>', 'help': 'Show info'},
                 \ {'key': 19, 'agent': 'tlib#agent#EditFileInSplit',  'key_name': '<c-s>', 'help': 'Edit files (split)'},
                 \ {'key': 22, 'agent': 'tlib#agent#EditFileInVSplit', 'key_name': '<c-v>', 'help': 'Edit files (vertical split)'},
@@ -305,7 +312,11 @@ function! TmruEdit(filename) "{{{3
         let bn = bufnr(filename)
         " TLogVAR bn
         if bn != -1 && buflisted(bn)
-            exec 'buffer '. bn
+            if g:tmru_drop
+                exec 'drop' fnameescape(filename)
+            else
+                exec 'buffer '. bn
+            endif
             return 1
         elseif filereadable(filename)
             try
@@ -553,6 +564,18 @@ function! s:RemoveItem(world, selected) "{{{3
     endif
     " TLogVAR a:world.idx
     let a:world.state = 'display'
+    return a:world
+endf
+
+
+function! s:Drop(world, selected) "{{{3
+    let filename = a:selected[0]
+    if bufnr(filename) != -1
+        exec 'drop' fnameescape(filename)
+    else
+        call TmruEdit(filename)
+    endif
+    let a:world.state = 'exit'
     return a:world
 endf
 
