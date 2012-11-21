@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-11-15.
-" @Revision:    678
+" @Last Change: 2012-11-20.
+" @Revision:    695
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -36,12 +36,12 @@ if !exists('g:tmru_drop')
 endif
 
 
-if !exists('g:tmru_single_child_mode')
+if !exists('g:tmru_single_instance_mode')
     " If true, work as if only one instance of vim is running. This 
     " results in reading and writing the mru list less frequently 
     " from/to disk. The list won't be synchronized across multiple 
     " instances of vim running in parallel.
-    let g:tmru_single_child_mode = 0   "{{{2
+    let g:tmru_single_instance_mode = 0   "{{{2
 endif
 
 
@@ -50,7 +50,7 @@ if !exists('g:tmru_update_viminfo')
     " |g:tmru_events|.
     " This is useful if 'viminfo' includes '!' and |g:tmru_file| is 
     " empty and you run multiple instances of vim.
-    let g:tmru_update_viminfo = !g:tmru_single_child_mode   "{{{2
+    let g:tmru_update_viminfo = !g:tmru_single_instance_mode   "{{{2
 endif
 
 
@@ -76,14 +76,14 @@ if !exists("g:tmru_events")
         unlet g:tmruEvents
     else
         let g:tmru_events = {
-                    \ 'VimLeave':     {'load': 0, 'register': 0, 'save': g:tmru_single_child_mode},
-                    \ 'FocusGained':  {'load': 1, 'register': 0, 'save': !g:tmru_single_child_mode},
-                    \ 'FocusLost':    {'load': 0, 'register': 0, 'save': !g:tmru_single_child_mode},
-                    \ 'BufWritePost': {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode},
-                    \ 'BufReadPost':  {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode}, 
-                    \ 'BufWinEnter':  {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode},
-                    \ 'BufEnter':     {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode},
-                    \ 'BufDelete':    {'load': 0, 'register': 1, 'save': !g:tmru_single_child_mode}
+                    \ 'VimLeave':     {'load': 0, 'register': 0, 'save': g:tmru_single_instance_mode},
+                    \ 'FocusGained':  {'load': 1, 'register': 0, 'save': !g:tmru_single_instance_mode},
+                    \ 'FocusLost':    {'load': 0, 'register': 0, 'save': !g:tmru_single_instance_mode},
+                    \ 'BufWritePost': {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode},
+                    \ 'BufReadPost':  {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode}, 
+                    \ 'BufWinEnter':  {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode},
+                    \ 'BufEnter':     {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode},
+                    \ 'BufDelete':    {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode}
                     \ }
     endif
 endif
