@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-27.
-" @Revision:    709
+" @Revision:    711
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -257,7 +257,8 @@ endf
 function! s:MruStore(mru, props)
     " TLogVAR g:tmru_file
     let tmru_list = s:MruSort(a:mru)[0 : g:tmruSize]
-    if get(a:props, 'save', 1) && tmru_list != s:tmru_list
+    let save = get(a:props, 'save', 1)
+    if save == 2 || (save && tmru_list != s:tmru_list)
         let s:tmru_list = tmru_list
         " TLogVAR g:TMRU
         " TLogVAR g:tmru_file
@@ -376,8 +377,9 @@ function! s:SelectMRU()
                     endif
                 endif
             endfor
+            " TLogVAR modified_mru
             if modified_mru > 0
-                call s:MruStore(mru0, {})
+                call s:MruStore(mru0, {'save': 2})
             endif
             return modified_mru < len(bs)
         endif
@@ -619,7 +621,7 @@ function! s:CheckFilenames(world, selected) "{{{3
         let idx -= 1
     endwh
     if unreadable > 0 || dupes > 0 || normalized > 0
-        call s:MruStore(mru, {})
+        call s:MruStore(mru, {'save': 2})
         echom "TMRU: Removed" unreadable "unreadable and" dupes "duplicate"
                     \ "files from mru list, and normalized" normalized "entries."
     endif
