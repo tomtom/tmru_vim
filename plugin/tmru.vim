@@ -142,6 +142,7 @@ endf
 if !exists('g:tmru_world') "{{{2
     let g:tmru_world = {
                 \ 'type': 'm',
+                \ 'scratch': '__TMRU__',
                 \ 'key_handlers': [
                 \ {'key': 3,  'agent': 'tlib#agent#CopyItems',        'key_name': '<c-c>', 'help': 'Copy file name(s)'},
                 \ {'key': 6,  'agent': s:SNR() .'CheckFilenames',     'key_name': '<c-f>', 'help': 'Check file name(s)'},
