@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-11-20.
-" @Revision:    695
+" @Last Change: 2012-11-27.
+" @Revision:    709
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -316,14 +316,14 @@ function! TmruEdit(filename) "{{{3
             if g:tmru_drop
                 exec 'drop' fnameescape(filename)
             else
-                exec 'buffer '. bn
+                exec 'buffer' bn
             endif
             return 1
         elseif filereadable(filename)
             try
                 let file = tlib#arg#Ex(filename)
                 " TLogVAR file
-                exec 'edit '. file
+                exec 'edit' file
             catch /E325/
                 " swap file exists, let the user handle it
             catch
