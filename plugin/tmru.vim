@@ -360,16 +360,26 @@ function! s:SelectMRU()
         " TLogDBG "SelectMRU#5"
         " TLogVAR bs
         if !empty(bs)
+            let modified_mru = 0
             for bf in bs
                 " TLogVAR bf
                 if !TmruEdit(bf)
-                    let bi = s:FindIndex(mru, bf)
+                    if modified_mru == 0
+                        let mru0 = s:MruRetrieve()
+                        let filenames0 = s:GetFilenames(mru0)
+                    endif
+                    let modified_mru += 1
+                    let bi = s:FilenameIndex(filenames0, bf)
                     " TLogVAR bi
-                    call remove(mru, bi)
-                    call s:MruStore(mru, {})
+                    if bi != -1
+                        call remove(mru0, bi)
+                    endif
                 endif
             endfor
-            return 1
+            if modified_mru > 0
+                call s:MruStore(mru0, {})
+            endif
+            return modified_mru < len(bs)
         endif
     endif
     return 0
@@ -398,18 +408,6 @@ function! s:AList2Dict(mru)
     for item in a:mru
         let props[item[0]] = item[1]
     endfor
-endf
-
-
-function! s:FindIndex(mru, filename)
-    let i = 0
-    for item in a:mru
-        if item[0] == a:filename
-            return i
-        endif
-        let i += 1
-    endif
-    return -1
 endf
 
 
