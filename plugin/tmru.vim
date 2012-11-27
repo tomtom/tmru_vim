@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-27.
-" @Revision:    711
+" @Revision:    712
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -511,7 +511,7 @@ function! s:UnsetPersistent(world, selected) "{{{3
             let mru[fidx][1]['sticky'] = 0
         endif
     endfor
-    call s:MruStore(mru, {})
+    call s:MruStore(mru, {'save': 2})
     let a:world.base = s:GetFilenames(mru)
     call s:SetFilenameIndicators(a:world, mru)
     let a:world.state = 'reset'
@@ -539,7 +539,7 @@ function! s:TogglePersistent(world, selected) "{{{3
         call input("Press ENTER to continue")
         echohl NONE
     endif
-    call s:MruStore(mru, {})
+    call s:MruStore(mru, {'save': 2})
     let a:world.base = s:GetFilenames(mru)
     call s:SetFilenameIndicators(a:world, mru)
     let a:world.state = 'reset'
@@ -562,7 +562,7 @@ function! s:RemoveItem(world, selected) "{{{3
             call remove(mru, fidx)
         endif
     endfor
-    call s:MruStore(mru, {})
+    call s:MruStore(mru, {'save': 2})
     call a:world.ResetSelected()
     let a:world.base = s:GetFilenames(mru)
     if idx > len(mru)
