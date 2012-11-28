@@ -3,21 +3,35 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2011-08-24.
-" @Revision:    10
+" @Revision:    25
 
 
-function! tmru#Session(defs, session_no) "{{{3
+function! tmru#Session(session_no, mru) "{{{3
     " TLogVAR a:session_no
-    let [mru, metadata] = a:defs
-    for idx in range(len(mru))
-        let metaitem = metadata[idx]
-        let session_no = get(metaitem, 'sessions', -1)
-        " TLogVAR idx, session_no
-        if session_no == a:session_no
-            let filename = mru[idx]
-            call TmruEdit(filename)
-        endif
-    endfor
+    let session_no = empty(a:session_no) ? 1 : str2nr(a:session_no)
+    if session_no > 0
+        for [filename, props] in a:mru
+            " TLogVAR filename, props
+            if get(props, 'session', 0) == session_no
+                call TmruEdit(filename)
+            endif
+        endfor
+    endif
+endf
+
+
+function! tmru#SetSessions(def) "{{{3
+    let [filename, props] = a:def
+    let session = get(props, 'session', 0)
+    if buflisted(filename)
+        let session += 1
+    endif
+    if session > 0 && session <= g:tmru_sessions
+        let a:def[1].session = session
+    elseif has_key(props, 'session')
+        call remove(a:def[1], 'session')
+    endif
+    return a:def
 endf
 
 
@@ -26,7 +40,7 @@ function! tmru#DisplayUnreadableFiles(mru) "{{{3
     for file in a:mru
         if !filereadable(file)
             echohl WarningMsg
-            echom "DBG TMRU: unreadable file:" file
+            " echom "DBG TMRU: unreadable file:" file
             echohl NONE
         endif
     endfor

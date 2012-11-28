@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-27.
-" @Revision:    712
+" @Revision:    740
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -27,6 +27,15 @@ if !exists("g:tmruMenuSize")
     " The number of recently edited files that are displayed in the 
     " menu.
     let g:tmruMenuSize = 20 "{{{2
+endif
+
+
+if !exists('g:tmru_sessions')
+    " If greater than zero, make tmru to save the file list opened when 
+    " closing vim. Save at most information for N sessions.
+    "
+    " Setting this variable to 0, disables this feature.
+    let g:tmru_sessions = 10   "{{{2
 endif
 
 
@@ -159,6 +168,10 @@ if !exists('g:tmru_world') "{{{2
                 \ }
     " \ 'filter_format': 'fnamemodify(%s, ":t")',
     if !empty(g:tmru_file)
+        if g:tmru_sessions > 0
+            call add(g:tmru_world.key_handlers,
+                        \ {'key': 12, 'agent': s:SNR() .'PreviousSession',    'key_name': '<c-l>', 'help': 'Open files from a previous session'})
+        endif
         call add(g:tmru_world.key_handlers,
                     \ {'key': 16, 'agent': s:SNR() .'TogglePersistent',   'key_name': '<c-p>', 'help': 'Toggle a file''s persistent mark'})
         call add(g:tmru_world.key_handlers,
@@ -392,9 +405,16 @@ function! s:SetFilenameIndicators(world, mru) "{{{3
     let a:world.filename_indicators = {}
     for item in a:mru
         let [filename, props] = item
+        let indicators = []
         if get(props, 'sticky', 0)
-            let a:world.filename_indicators[filename] = "s"
-            " TLogVAR item, props
+            call add(indicators, "s")
+        endif
+        let session = get(props, 'session', 0)
+        if session > 0
+            call add(indicators, '-'. session)
+        endif
+        if !empty(indicators)
+            let a:world.filename_indicators[filename] = join(indicators, '')
         endif
     endfor
 endf
@@ -649,4 +669,24 @@ command! TMRU TRecentlyUsedFiles
 
 " Edit the MRU list.
 command! TRecentlyUsedFilesEdit call s:EditMRU()
+
+if g:tmru_sessions > 0
+    " Open files from a previous session (see |g:tmru_sessions|).
+    " This command is only available if g:tmru_sessions > 0.
+    command! -nargs=? TRecentlyUsedFilesSessions call tmru#Session(<q-args>, s:MruRetrieve())
+
+    autocmd tmru VimLeave * call s:MruStore(map(s:MruRetrieve(), 'tmru#SetSessions(v:val)'), {'save': 2})
+
+    function! s:PreviousSession(world, selected) "{{{3
+        let session = input('Session number: ', 1)
+        if session > 0
+            call a:world.CloseScratch()
+            exec 'TRecentlyUsedFilesSessions' session
+            let a:world.state = 'exit'
+        else
+            let a:world.state = 'redisplay'
+        endif
+        return a:world
+    endf
+endif
 
