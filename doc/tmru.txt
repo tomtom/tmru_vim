@@ -45,19 +45,23 @@ Suggested maps (to be set in ~/.vimrc): >
 ========================================================================
 Contents~
 
-        g:tmruMenu ................ |g:tmruMenu|
-        g:tmruMenuSize ............ |g:tmruMenuSize|
-        g:tmru_events ............. |g:tmru_events|
-        g:tmru_update_viminfo ..... |g:tmru_update_viminfo|
-        g:tmru_file ............... |g:tmru_file|
-        g:tmruSize ................ |g:tmruSize|
-        g:tmruExclude ............. |g:tmruExclude|
-        g:tmru_ignorecase ......... |g:tmru_ignorecase|
-        g:tmru_check_disk ......... |g:tmru_check_disk|
-        TmruEdit .................. |TmruEdit()|
-        :TRecentlyUsedFiles ....... |:TRecentlyUsedFiles|
-        :TMRU ..................... |:TMRU|
-        :TRecentlyUsedFilesEdit ... |:TRecentlyUsedFilesEdit|
+        g:tmruMenu .................... |g:tmruMenu|
+        g:tmruMenuSize ................ |g:tmruMenuSize|
+        g:tmru_sessions ............... |g:tmru_sessions|
+        g:tmru_drop ................... |g:tmru_drop|
+        g:tmru_single_instance_mode ... |g:tmru_single_instance_mode|
+        g:tmru_update_viminfo ......... |g:tmru_update_viminfo|
+        g:tmru_events ................. |g:tmru_events|
+        g:tmru_file ................... |g:tmru_file|
+        g:tmruSize .................... |g:tmruSize|
+        g:tmruExclude ................. |g:tmruExclude|
+        g:tmru_ignorecase ............. |g:tmru_ignorecase|
+        g:tmru_check_disk ............. |g:tmru_check_disk|
+        TmruEdit ...................... |TmruEdit()|
+        :TRecentlyUsedFiles ........... |:TRecentlyUsedFiles|
+        :TMRU ......................... |:TMRU|
+        :TRecentlyUsedFilesEdit ....... |:TRecentlyUsedFilesEdit|
+        :TRecentlyUsedFilesSessions ... |:TRecentlyUsedFilesSessions|
 
 
 ========================================================================
@@ -72,24 +76,40 @@ g:tmruMenuSize                 (default: 20)
     The number of recently edited files that are displayed in the 
     menu.
 
-                                                    *g:tmru_events*
-g:tmru_events                  (default: {...})
-    A dictionary of {EVENT: [LOAD, SAVE]}. If LOAD or SAVE evaluates 
-    to true, the mru list is load/saved for the respective |{event}|.
+                                                    *g:tmru_sessions*
+g:tmru_sessions                (default: 10)
+    If greater than zero, make tmru to save the file list opened when 
+    closing vim. Save at most information for N sessions.
 
-    LOAD =  1: Load the external representation of the mru list
-    LOAD =  0: Use the internal representation of the mru list
-    SAVE =  1: Save the mru list to its external representation
-    SAVE =  0: Save the mru list to its internal representation
-    SAVE = -1: Ignore this event for saving.
+    Setting this variable to 0, disables this feature.
 
+                                                    *g:tmru_drop*
+g:tmru_drop                    (default: 1)
+    If true, use |:drop| to edit loaded buffers.
+
+                                                    *g:tmru_single_instance_mode*
+g:tmru_single_instance_mode    (default: 0)
+    If true, work as if only one instance of vim is running. This 
+    results in reading and writing the mru list less frequently 
+    from/to disk. The list won't be synchronized across multiple 
+    instances of vim running in parallel.
 
                                                     *g:tmru_update_viminfo*
-g:tmru_update_viminfo          (default: 0)
+g:tmru_update_viminfo          (default: !g:tmru_single_instance_mode)
     If true, load and save the viminfo file on certain events -- see 
     |g:tmru_events|.
     This is useful if 'viminfo' includes '!' and |g:tmru_file| is 
     empty and you run multiple instances of vim.
+
+                                                    *g:tmru_events*
+g:tmru_events                  (default: {...})
+    A dictionary of {EVENT: ACTION = BOOL, ...}, where ACTION is one 
+    of the following:
+
+    LOAD ....... Load the external representation from disk
+    REGISTER ... Register the current buffer
+    SAVE ....... Save mru list to disk
+
 
                                                     *g:tmru_file*
 g:tmru_file                    (default: tlib#persistent#Filename('tmru', 'files', 1))
@@ -133,6 +153,11 @@ TmruEdit(filename)
                                                     *:TRecentlyUsedFilesEdit*
 :TRecentlyUsedFilesEdit
     Edit the MRU list.
+
+                                                    *:TRecentlyUsedFilesSessions*
+:TRecentlyUsedFilesSessions
+    Open files from a previous session (see |g:tmru_sessions|).
+    This command is only available if g:tmru_sessions > 0.
 
 
 
