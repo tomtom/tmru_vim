@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-30.
-" @Revision:    822
+" @Revision:    845
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -86,7 +86,7 @@ if !exists("g:tmru_events")
         unlet g:tmruEvents
     else
         let g:tmru_events = {
-                    \ 'VimLeave':     {'load': 0, 'register': 0, 'save': g:tmru_single_instance_mode},
+                    \ 'VimLeave':     {'load': 0, 'register': 0, 'save': g:tmru_single_instance_mode, 'exit': 1},
                     \ 'FocusGained':  {'load': 1, 'register': 0, 'save': !g:tmru_single_instance_mode},
                     \ 'FocusLost':    {'load': 0, 'register': 0, 'save': !g:tmru_single_instance_mode},
                     \ 'BufWritePost': {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode},
@@ -230,12 +230,13 @@ function! s:SetFilenameIndicators(world, mru) "{{{3
         if get(props, 'sticky', 0)
             call add(indicators, "s")
         endif
-        let session = get(props, 'session', 0)
-        if session > 0
-            call add(indicators, '-'. session)
+        let sessions = get(props, 'sessions', [])
+        if !empty(sessions)
+            call add(indicators, '-'. join(sessions, '-'))
         endif
         if !empty(indicators)
             let fname = g:tmru#display_relative_filename ? a:world.base[idx] : filename
+            " TLogVAR fname, indicators
             let a:world.filename_indicators[fname] = join(indicators, '')
         endif
         let idx += 1
@@ -275,14 +276,22 @@ function! s:NormalizeFilename(filename) "{{{3
 endf
 
 
-function! s:MruStore(mru, props)
-    " TLogVAR g:tmru_file, a:props
+function! s:MruStore(mru, ...)
+    " TLogVAR g:tmru_file
+    let props = a:0 >= 1 ? a:1 : {}
     let tmru_list = s:MruSort(a:mru)[0 : g:tmruSize]
+    if get(props, 'exit', 0)
+        " echom "DBG tmru_list != s:tmru_list" (tmru_list != s:tmru_list)
+        " echom "DBG tmru_list != s:tmru_list" (string(tmru_list) != string(s:tmru_list))
+        " echom "DBG tmru_list" string(filter(copy(tmru_list), 'has_key(v:val[1], "sessions")'))
+    endif
     if tmru_list != s:tmru_list
-        let s:tmru_list = copy(tmru_list)
+        let s:tmru_list = deepcopy(tmru_list)
         " TLogVAR g:TMRU
         " TLogVAR g:tmru_file
-        call s:BuildMenu(0)
+        if !get(props, 'exit', 0)
+            call s:BuildMenu(0)
+        endif
         if empty(g:tmru_file)
             if g:tmru_update_viminfo
                 let g:TMRU = join(map(s:tmru_list, 'v:val[0]'), "\n")
@@ -403,8 +412,8 @@ if g:tmru_sessions > 0
 
     autocmd tmru VimLeave * 
                 \ let s:tmruobj = TmruObj() |
-                \ let s:tmruobj.mru = map(s:tmruobj.mru, 'tmru#SetSessions(v:val)') |
-                \ call s:tmruobj.Save() |
+                \ let s:tmruobj.mru = map(deepcopy(s:tmruobj.mru), 'tmru#SetSessions(v:val)') |
+                \ call s:tmruobj.Save({'exit': 1}) |
                 \ unlet s:tmruobj
 
 endif

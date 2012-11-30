@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2012-11-29.
-" @Revision:    52
+" @Revision:    68
 
 
 if !exists('g:tmru#world') "{{{2
@@ -152,7 +152,7 @@ function! tmru#Session(session_no, mru) "{{{3
     if session_no > 0
         for [filename, props] in a:mru
             " TLogVAR filename, props
-            if get(props, 'session', 0) == session_no
+            if index(get(props, 'sessions', []), session_no) != -1
                 call tmru#Edit(filename)
             endif
         endfor
@@ -162,16 +162,18 @@ endf
 
 function! tmru#SetSessions(def) "{{{3
     let [filename, props] = a:def
-    let session = get(props, 'session', 0)
-    if buflisted(filename)
-        let session = 1
-    elseif session > 0
-        let session += 1
+    let sessions = get(props, 'sessions', [])
+    if !empty(sessions)
+        let sessions = map(sessions, 'v:val + 1')
+        let sessions = filter(sessions, 'v:val <= g:tmru_sessions')
     endif
-    if session > 0 && session <= g:tmru_sessions
-        let a:def[1].session = session
-    elseif has_key(props, 'session')
-        call remove(a:def[1], 'session')
+    if buflisted(filename)
+        let sessions = insert(sessions, 1)
+    endif
+    if !empty(sessions)
+        let a:def[1].sessions = sessions
+    elseif has_key(props, 'sessions')
+        call remove(a:def[1], 'sessions')
     endif
     return a:def
 endf
@@ -318,26 +320,34 @@ endf
 
 
 function! tmru#PreviousSession(world, selected) "{{{3
-    let sessions = []
+    let sessions_done = []
     let tmruobj = TmruObj()
     let filenames = tmruobj.GetFilenames()
     for filename in a:selected
         let fidx = tmruobj.FilenameIndex(filenames, filename)
         if fidx >= 0
             let props = tmruobj.mru[fidx][1]
-            if has_key(props, 'session')
-                let session = props['session']
-                if session > 0 && index(sessions, session) == -1
-                    if empty(sessions)
+            if has_key(props, 'sessions')
+                let sessions = copy(props.sessions)
+                let sessions = filter(sessions, 'index(sessions_done, v:val) == -1')
+                if empty(sessions)
+                    let session = 0
+                elseif len(sessions) == 1
+                    let session = sessions[0]
+                else
+                    let session = tlib#input#List('s', 'Select session:', sessions)
+                endif
+                if session > 0
+                    if empty(sessions_done)
                         call a:world.CloseScratch()
                     endif
-                    call add(sessions, session)
+                    call add(sessions_done, session)
                     exec 'TRecentlyUsedFilesSessions' session
                 endif
             endif
         endif
     endfor
-    if empty(sessions)
+    if empty(sessions_done)
         let a:world.state = 'redisplay'
     else
         let a:world.state = 'exit'
