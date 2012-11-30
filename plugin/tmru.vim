@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2012-11-29.
-" @Revision:    821
+" @Last Change: 2012-11-30.
+" @Revision:    822
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -223,6 +223,7 @@ endf
 
 function! s:SetFilenameIndicators(world, mru) "{{{3
     let a:world.filename_indicators = {}
+    let idx = 0
     for item in a:mru
         let [filename, props] = item
         let indicators = []
@@ -234,8 +235,10 @@ function! s:SetFilenameIndicators(world, mru) "{{{3
             call add(indicators, '-'. session)
         endif
         if !empty(indicators)
-            let a:world.filename_indicators[filename] = join(indicators, '')
+            let fname = g:tmru#display_relative_filename ? a:world.base[idx] : filename
+            let a:world.filename_indicators[fname] = join(indicators, '')
         endif
+        let idx += 1
     endfor
 endf
 
