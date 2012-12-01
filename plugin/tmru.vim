@@ -35,7 +35,7 @@ if !exists('g:tmru_sessions')
     " closing vim. Save at most information for N sessions.
     "
     " Setting this variable to 0, disables this feature.
-    let g:tmru_sessions = 10   "{{{2
+    let g:tmru_sessions = 9   "{{{2
 endif
 
 
