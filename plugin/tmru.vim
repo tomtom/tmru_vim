@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-30.
-" @Revision:    845
+" @Revision:    853
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -337,12 +337,10 @@ let s:last_auto_filename = ''
 
 function! s:RegisterFile(filename, event, props) "{{{3
     " TLogVAR a:filename, a:event, a:props, &buftype
-    if empty(a:filename)
-        return
-    endif
-    if get(a:props, 'register', 1) && s:last_auto_filename != a:filename
+    if !empty(a:filename) && get(a:props, 'register', 1) && s:last_auto_filename != a:filename
         " TLogVAR "Consider", a:filename
-        if &buflisted && &buftype !~ 'nofile' &&
+        if getbufvar(a:filename, '&buflisted') &&
+                    \ getbufvar(a:filename, '&buftype') !~ 'nofile' &&
                     \ (g:tmru_check_disk ?
                     \     (filereadable(a:filename) && !isdirectory(a:filename)) :
                     \     fnamemodify(a:filename, ":t") != '')
@@ -350,7 +348,6 @@ function! s:RegisterFile(filename, event, props) "{{{3
             call s:MruRegister(a:filename, a:props)
         endif
     endif
-    " TLogVAR "exit"
 endf
 
 
@@ -394,6 +391,11 @@ augroup tmru
     endfor
     unlet! s:event s:props
 augroup END
+
+for s:i in range(1, bufnr('$'))
+    call s:RegisterFile(bufname(s:i), 'vimstarting', {'register': 1})
+endfor
+unlet! s:i
 
 
 " Display the MRU list.
