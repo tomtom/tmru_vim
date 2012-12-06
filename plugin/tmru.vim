@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-30.
-" @Revision:    853
+" @Revision:    854
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -35,6 +35,8 @@ if !exists('g:tmru_sessions')
     " closing vim. Save at most information for N sessions.
     "
     " Setting this variable to 0, disables this feature.
+    "
+    " This variable must be set before starting vim.
     let g:tmru_sessions = 9   "{{{2
 endif
 

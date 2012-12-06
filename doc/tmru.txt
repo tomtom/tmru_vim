@@ -45,23 +45,23 @@ Suggested maps (to be set in ~/.vimrc): >
 ========================================================================
 Contents~
 
-        g:tmruMenu .................... |g:tmruMenu|
-        g:tmruMenuSize ................ |g:tmruMenuSize|
-        g:tmru_sessions ............... |g:tmru_sessions|
-        g:tmru_drop ................... |g:tmru_drop|
-        g:tmru_single_instance_mode ... |g:tmru_single_instance_mode|
-        g:tmru_update_viminfo ......... |g:tmru_update_viminfo|
-        g:tmru_events ................. |g:tmru_events|
-        g:tmru_file ................... |g:tmru_file|
-        g:tmruSize .................... |g:tmruSize|
-        g:tmruExclude ................. |g:tmruExclude|
-        g:tmru_ignorecase ............. |g:tmru_ignorecase|
-        g:tmru_check_disk ............. |g:tmru_check_disk|
-        TmruEdit ...................... |TmruEdit()|
-        :TRecentlyUsedFiles ........... |:TRecentlyUsedFiles|
-        :TMRU ......................... |:TMRU|
-        :TRecentlyUsedFilesEdit ....... |:TRecentlyUsedFilesEdit|
-        :TRecentlyUsedFilesSessions ... |:TRecentlyUsedFilesSessions|
+        g:tmruMenu ......................... |g:tmruMenu|
+        g:tmruMenuSize ..................... |g:tmruMenuSize|
+        g:tmru_sessions .................... |g:tmru_sessions|
+        g:tmru#display_relative_filename ... |g:tmru#display_relative_filename|
+        g:tmru_single_instance_mode ........ |g:tmru_single_instance_mode|
+        g:tmru_update_viminfo .............. |g:tmru_update_viminfo|
+        g:tmru_events ...................... |g:tmru_events|
+        g:tmru_file ........................ |g:tmru_file|
+        g:tmruSize ......................... |g:tmruSize|
+        g:tmruExclude ...................... |g:tmruExclude|
+        g:tmru_ignorecase .................. |g:tmru_ignorecase|
+        g:tmru_check_disk .................. |g:tmru_check_disk|
+        TmruObj ............................ |TmruObj()|
+        :TRecentlyUsedFiles ................ |:TRecentlyUsedFiles|
+        :TMRU .............................. |:TMRU|
+        :TRecentlyUsedFilesEdit ............ |:TRecentlyUsedFilesEdit|
+        :TRecentlyUsedFilesSessions ........ |:TRecentlyUsedFilesSessions|
 
 
 ========================================================================
@@ -77,15 +77,18 @@ g:tmruMenuSize                 (default: 20)
     menu.
 
                                                     *g:tmru_sessions*
-g:tmru_sessions                (default: 10)
+g:tmru_sessions                (default: 9)
     If greater than zero, make tmru to save the file list opened when 
     closing vim. Save at most information for N sessions.
 
     Setting this variable to 0, disables this feature.
 
-                                                    *g:tmru_drop*
-g:tmru_drop                    (default: 1)
-    If true, use |:drop| to edit loaded buffers.
+    This variable must be set before starting vim.
+
+                                                    *g:tmru#display_relative_filename*
+g:tmru#display_relative_filename (default: 0)
+    If true, display the relative filename. This requires 
+    |g:tlib#input#format_filename| to be set to "r".
 
                                                     *g:tmru_single_instance_mode*
 g:tmru_single_instance_mode    (default: 0)
@@ -106,9 +109,9 @@ g:tmru_events                  (default: {...})
     A dictionary of {EVENT: ACTION = BOOL, ...}, where ACTION is one 
     of the following:
 
-    LOAD ....... Load the external representation from disk
-    REGISTER ... Register the current buffer
-    SAVE ....... Save mru list to disk
+    load ....... Load the external representation from disk
+    register ... Register the current buffer
+    save ....... Save mru list to disk (currently ignored)
 
 
                                                     *g:tmru_file*
@@ -137,10 +140,8 @@ g:tmru_check_disk              (default: 1)
     This may cause annoying slow-downs in certain settings. In this 
     case, set this variable to 0 in your |vimrc| file.
 
-                                                    *TmruEdit()*
-TmruEdit(filename)
-    Return 0 if the file isn't readable/doesn't exist.
-    Otherwise return 1.
+                                                    *TmruObj()*
+TmruObj(...)
 
                                                     *:TRecentlyUsedFiles*
 :TRecentlyUsedFiles
