@@ -1,6 +1,7 @@
-This plugin provides a simple most recently used files facility. Users 
-can use patterns to filter the file list. Users can open multiple files 
-at once.
+This plugin allows users to open recently used files. Users can filter 
+the file list by typing a pattern. Users can open multiple files at 
+once. The list of recently used files is synchronized across multiple 
+instances of (g)vim running simultaneously.
 
 :TRecentlyUsedFiles ... open one or more recently used file(s)
 :TRecentlyUsedFilesEdit ... edit the mru list
