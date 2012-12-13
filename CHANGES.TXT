@@ -75,3 +75,33 @@ version: "0.10"
   - tmru#DisplayUnreadableFiles(mru)
   MD5 checksum: 7c61e5342a1551f30a2d61fd7dd4965e
 
+version: "1.00"
+  - Use tlib#persistent
+  - Error when the list of recently used files was empty
+  - Handle multiple running instances of vim (fixes #23)
+  - s:MruRetrieve(...): call tlib#persistent#Get() only once
+  - TMRU: Alias for |:TRecentlyUsedFiles|.
+  - Removed support for metadata (which was broken anyway)
+  - on edit ignore swap file exists error + use v:exception for other errors
+  - Set g:tmruSize dependent on whether viminfo is used
+  - File properties again (only if viminfo is not used)
+  - Mark files as persistent/sticky (i.e. the won't be removed from the list)
+  - Fix problem on windows (val -> v:val)
+  - Normalize filenames when registering a buffer; minor improvements
+  - Improved synchronization of mru lists across multiple instances of vim (fixes #26)
+  - Mark sticky filenames with "s"
+  - g:tmru_drop
+  - Renamed g:tmru_single_child_mode to g:tmru_single_instance_mode
+  - Filename indicators (s for sticky files; requires tlib 1.04)
+  - Name buffer __TMRU__
+  - s:SelectMRU(): Don't use s:FindIndex() and make sure to use the currect mru list (fixes #27)
+  - Make sure to save the file list when removing outdated files
+  - Make sure to save the mru list when it has been modified upon the user's request
+  - Re-introduced :TRecentlyUsedFilesSessions command.
+  - Code reorganization
+  - Fix use of relative filenames (closes #29)
+  - Don't simply record a file's latest session but every session it was in
+  - g:tmru_sessions = 9
+  - Make sure to register file's that are already opened when tmru is loaded
+  MD5 checksum: 82ed5a7b285c6ca1ec7bd0a2d5795039
+
