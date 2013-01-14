@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2012-11-30.
-" @Revision:    854
+" @Revision:    856
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -169,8 +169,8 @@ function! TmruObj(...) "{{{3
     function! tmruobj.SetBase(world) dict
         let a:world.base = self.GetFilenames()
         if g:tmru#display_relative_filename
-            let basedir = expand('%:p:h')
-            call map(a:world.base, 'tlib#file#Relative(v:val, basedir)')
+            let basedir = getcwd()
+            let a:world.base = map(a:world.base, 'tlib#file#Relative(v:val, basedir)')
         endif
         call s:SetFilenameIndicators(a:world, self.mru)
     endf
