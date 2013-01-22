@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2012-11-29.
-" @Revision:    69
+" @Revision:    70
 
 
 if !exists('g:tmru#world') "{{{2
@@ -35,7 +35,7 @@ if !exists('g:tmru#world') "{{{2
         call add(g:tmru#world.key_handlers,
                     \ {'key': 21, 'agent': 'tmru#UnsetPersistent',   'key_name': '<c-u>', 'help': 'Unset a file''s persistent mark'})
     endif
-    if !empty(g:tmru_world)
+    if exists('g:tmru_world')
         let g:tmru#world = extend(g:tmru#world, g:tmru_world)
     endif
 endif
