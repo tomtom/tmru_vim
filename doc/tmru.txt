@@ -64,6 +64,20 @@ Contents~
         :TMRU .............................. |:TMRU|
         :TRecentlyUsedFilesEdit ............ |:TRecentlyUsedFilesEdit|
         :TRecentlyUsedFilesSessions ........ |:TRecentlyUsedFilesSessions|
+        g:tmru#drop ........................ |g:tmru#drop|
+        g:tmru#auto_remove_unreadable ...... |g:tmru#auto_remove_unreadable|
+        tmru#SelectMRU ..................... |tmru#SelectMRU()|
+        tmru#EditMRU ....................... |tmru#EditMRU()|
+        tmru#EditFiles ..................... |tmru#EditFiles()|
+        tmru#Session ....................... |tmru#Session()|
+        tmru#SetSessions ................... |tmru#SetSessions()|
+        tmru#DisplayUnreadableFiles ........ |tmru#DisplayUnreadableFiles()|
+        tmru#CheckFilenames ................ |tmru#CheckFilenames()|
+        tmru#RemoveItem .................... |tmru#RemoveItem()|
+        tmru#Drop .......................... |tmru#Drop()|
+        tmru#UnsetPersistent ............... |tmru#UnsetPersistent()|
+        tmru#TogglePersistent .............. |tmru#TogglePersistent()|
+        tmru#PreviousSession ............... |tmru#PreviousSession()|
 
 
 ========================================================================
@@ -161,6 +175,58 @@ TmruObj(...)
 :TRecentlyUsedFilesSessions
     Open files from a previous session (see |g:tmru_sessions|).
     This command is only available if g:tmru_sessions > 0.
+
+
+========================================================================
+autoload/tmru.vim~
+
+                                                    *g:tmru#drop*
+g:tmru#drop                    (default: 1)
+    If true, use |:drop| to edit loaded buffers.
+
+                                                    *g:tmru#auto_remove_unreadable*
+g:tmru#auto_remove_unreadable  (default: 1)
+    If true, automatically remove unreadable files from the mru list, 
+    when trying to edit them.
+
+                                                    *tmru#SelectMRU()*
+tmru#SelectMRU()
+
+                                                    *tmru#EditMRU()*
+tmru#EditMRU()
+
+                                                    *tmru#EditFiles()*
+tmru#EditFiles(filenames, ...)
+
+                                                    *tmru#Session()*
+tmru#Session(session_no, mru)
+
+                                                    *tmru#SetSessions()*
+tmru#SetSessions(def)
+
+                                                    *tmru#DisplayUnreadableFiles()*
+tmru#DisplayUnreadableFiles(mru)
+
+                                                    *tmru#CheckFilenames()*
+tmru#CheckFilenames(world, selected)
+    Validate list of filenames in mru list.
+    This checks that files are readable and removes any (canonicalized)
+    duplicates.
+
+                                                    *tmru#RemoveItem()*
+tmru#RemoveItem(world, selected)
+
+                                                    *tmru#Drop()*
+tmru#Drop(world, selected)
+
+                                                    *tmru#UnsetPersistent()*
+tmru#UnsetPersistent(world, selected)
+
+                                                    *tmru#TogglePersistent()*
+tmru#TogglePersistent(world, selected)
+
+                                                    *tmru#PreviousSession()*
+tmru#PreviousSession(world, selected)
 
 
 
