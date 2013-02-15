@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2012-11-29.
-" @Revision:    70
+" @Revision:    87
 
 
 if !exists('g:tmru#world') "{{{2
@@ -47,6 +47,13 @@ if !exists('g:tmru#drop')
 endif
 
 
+if !exists('g:tmru#auto_remove_unreadable')
+    " If true, automatically remove unreadable files from the mru list, 
+    " when trying to edit them.
+    let g:tmru#auto_remove_unreadable = 1   "{{{2
+endif
+
+
 function! tmru#SelectMRU()
     " TLogDBG "SelectMRU#1"
    let tmruobj = TmruObj()
@@ -60,29 +67,7 @@ function! tmru#SelectMRU()
         let bs    = tlib#input#ListW(world)
         " TLogDBG "SelectMRU#5"
         " TLogVAR bs
-        if !empty(bs)
-            let modified_mru = 0
-            for bf in bs
-                " TLogVAR bf
-                if !tmru#Edit(bf)
-                    if modified_mru == 0
-                        call tmruobj.Update()
-                        let filenames = tmruobj.GetFilenames()
-                    endif
-                    let modified_mru += 1
-                    let bi = tmruobj.FilenameIndex(filenames, bf)
-                    " TLogVAR bi
-                    if bi != -1
-                        call remove(tmruobj.mru, bi)
-                    endif
-                endif
-            endfor
-            " TLogVAR modified_mru
-            if modified_mru > 0
-                call tmruobj.Save()
-            endif
-            return modified_mru < len(bs)
-        endif
+        call tmru#EditFiles(bs, tmruobj)
     endif
     return 0
 endf
@@ -109,9 +94,27 @@ function! s:AList2Dict(mru)
 endf
 
 
+function! tmru#EditFiles(filenames, ...) "{{{3
+    if !empty(a:filenames)
+        let tmruobj = a:0 >= 1 ? a:1 : TmruObj()
+        let remove_files = []
+        for bf in a:filenames
+            " TLogVAR bf
+            if !s:Edit(bf)
+                call add(remove_files, bf)
+            endif
+        endfor
+        if g:tmru#auto_remove_unreadable && !empty(remove_files)
+            return !s:RemoveItems(remove_files, tmruobj)
+        endif
+    endif
+    return 1
+endf
+
+
 " Return 0 if the file isn't readable/doesn't exist.
 " Otherwise return 1.
-function! tmru#Edit(filename) "{{{3
+function! s:Edit(filename) "{{{3
     let filename = fnamemodify(a:filename, ':p')
     if filename == expand('%:p')
         return 1
@@ -149,16 +152,40 @@ function! tmru#Edit(filename) "{{{3
 endf
 
 
+function! s:RemoveItems(filenames, ...) "{{{3
+    let modified_list = 0
+    if !empty(a:filenames)
+        let tmruobj = a:0 >= 1 ? a:1 : TmruObj()
+        call tmruobj.Update()
+        let filenames = tmruobj.GetFilenames()
+        for bf in a:filenames
+            let bi = tmruobj.FilenameIndex(filenames, bf)
+            " TLogVAR bi
+            if bi != -1
+                call remove(tmruobj.mru, bi)
+                let modified_list = 1
+            endif
+        endfor
+        if modified_list
+            call tmruobj.Save()
+        endif
+    endif
+    return modified_list
+endf
+
+
 function! tmru#Session(session_no, mru) "{{{3
     " TLogVAR a:session_no
     let session_no = empty(a:session_no) ? 1 : str2nr(a:session_no)
     if session_no > 0
+        let filenames = []
         for [filename, props] in a:mru
             " TLogVAR filename, props
             if index(get(props, 'sessions', []), session_no) != -1
-                call tmru#Edit(filename)
+                call add(filenames, filename)
             endif
         endfor
+        call tmru#EditFiles(filenames)
     endif
 endf
 
@@ -271,7 +298,7 @@ function! tmru#Drop(world, selected) "{{{3
     if bufnr(filename) != -1
         exec 'drop' fnameescape(filename)
     else
-        call tmru#Edit(filename)
+        call tmru#EditFiles([filename])
     endif
     let a:world.state = 'exit'
     return a:world
