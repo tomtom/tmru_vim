@@ -42,8 +42,8 @@ endif
 
 
 if !exists('g:tmru#drop')
-    " If true, use |:drop| to edit loaded buffers.
-    let g:tmru#drop = 1   "{{{2
+    " If true, use |:drop| to edit loaded buffers (only available with GUI).
+    let g:tmru#drop = has('gui')   "{{{2
 endif
 
 
