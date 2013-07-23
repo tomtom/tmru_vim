@@ -44,6 +44,13 @@ if !exists('g:tmru#world') "{{{2
 endif
 
 
+if !exists('g:tmru_select_filter')
+    " If non-empty, an expression to |filter()| the list of files.
+    " Can also be buffer-local.
+    let g:tmru_select_filter = ''   "{{{2
+endif
+
+
 if !exists('g:tmru#drop')
     " If true, use |:drop| to edit loaded buffers (only available with GUI).
     let g:tmru#drop = has('gui')   "{{{2
@@ -67,6 +74,10 @@ function! tmru#SelectMRU()
         call world.Set_display_format('filename')
         " TLogDBG "SelectMRU#3"
         call tmruobj.SetBase(world)
+        let select_filter = tlib#var#Get('tmru_select_filter', 'bg')
+        if !empty(select_filter)
+            let world.base = filter(world.base, select_filter)
+        endif
         " TLogDBG "SelectMRU#4"
         let bs    = tlib#input#ListW(world)
         " TLogDBG "SelectMRU#5"
