@@ -2,11 +2,14 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2012-11-29.
-" @Revision:    87
+" @Last Change: 2013-07-18.
+" @Revision:    98
 
 
 if !exists('g:tmru#world') "{{{2
+    "                                       *g:tmru_world* *b:tmru_world*
+    " If the variables b:tmru_world or g:tmru_world exist, they are used 
+    " to extend the value of g:tmru#world.
     let g:tmru#world = {
                 \ 'type': 'm',
                 \ 'scratch': '__TMRU__',
@@ -59,7 +62,8 @@ function! tmru#SelectMRU()
    let tmruobj = TmruObj()
     if !empty(tmruobj.mru)
         " TLogDBG "SelectMRU#2"
-        let world = tlib#World#New(g:tmru#world)
+        let w0 = exists('b:tmru_world') ? extend(copy(g:tmru#world), b:tmru_world) : g:tmru#world
+        let world = tlib#World#New(w0)
         call world.Set_display_format('filename')
         " TLogDBG "SelectMRU#3"
         call tmruobj.SetBase(world)
