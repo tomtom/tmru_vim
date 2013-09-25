@@ -2,8 +2,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2013-07-18.
-" @Revision:    98
+" @Last Change: 2013-09-25.
+" @Revision:    241
 
 
 if !exists('g:tmru#world') "{{{2
@@ -14,9 +14,9 @@ if !exists('g:tmru#world') "{{{2
                 \ 'type': 'm',
                 \ 'scratch': '__TMRU__',
                 \ 'key_handlers': [
-                \ {'key': 3,  'agent': 'tlib#agent#CopyItems',        'key_name': '<c-c>', 'help': 'Copy file name(s)'},
-                \ {'key': 6,  'agent': 'tmru#CheckFilenames',     'key_name': '<c-f>', 'help': 'Check file name(s)'},
-                \ {'key': "\<del>", 'agent': 'tmru#RemoveItem',   'key_name': '<del>', 'help': 'Remove file name(s)'},
+                \ {'key': 3,  'agent': 'tlib#agent#CopyItems',        'key_name': '<c-c>', 'submenu': 'Edit', 'help': 'Copy file name(s)'},
+                \ {'key': 6,  'agent': 'tmru#CheckFilenames',     'key_name': '<c-f>', 'submenu': 'Edit', 'help': 'Check file name(s)'},
+                \ {'key': "\<del>", 'agent': 'tmru#RemoveItem',   'key_name': '<del>', 'submenu': 'Edit', 'help': 'Remove file name(s)'},
                 \ {'key': "\<c-cr>", 'agent': 'tmru#Drop',        'key_name': '<c-cr>', 'help': 'Drop to file name'},
                 \ {'key': 9,  'agent': 'tlib#agent#ShowInfo',         'key_name': '<c-i>', 'help': 'Show info'},
                 \ {'key': 19, 'agent': 'tlib#agent#EditFileInSplit',  'key_name': '<c-s>', 'help': 'Edit files (split)'},
@@ -30,13 +30,19 @@ if !exists('g:tmru#world') "{{{2
     " \ 'filter_format': 'fnamemodify(%s, ":t")',
     if !empty(g:tmru_file)
         if g:tmru_sessions > 0
-            call add(g:tmru#world.key_handlers,
-                        \ {'key': 12, 'agent': 'tmru#PreviousSession',    'key_name': '<c-l>', 'help': 'Open files from the selected session'})
+            let g:tmru#world.key_handlers += [
+                        \ {'key': 12, 'agent': 'tmru#PreviousSession',    'key_name': '<c-l>', 'submenu': 'Sessions', 'help': 'Open files from a session'},
+                        \ {'key': '<2-12>', 'agent': 'tmru#OpenNamedSession',  'key_name': '<c-s-l>', 'submenu': 'Sessions', 'help': 'Open a named session'},
+                        \ {'key': 28, 'agent': 'tmru#SelectNamedSession',  'key_name': '<c-#>', 'submenu': 'Sessions', 'help': '(Un-)Select a named session'},
+                        \ {'key': 29, 'agent': 'tmru#AddNamedSession',    'key_name': '<c-+>', 'submenu': 'Sessions', 'help': 'Add files to a session'},
+                        \ {'key': 31, 'agent': 'tmru#RemoveNamedSession', 'key_name': '<c-->', 'submenu': 'Sessions', 'help': 'Remove files from a session'},
+                        \ {'key': 5,  'agent': 'tmru#EditNamedSessions',  'key_name': '<c-e>', 'submenu': 'Sessions', 'help': 'Edit named sessions'},
+                        \ ]
         endif
         call add(g:tmru#world.key_handlers,
-                    \ {'key': 16, 'agent': 'tmru#TogglePersistent',   'key_name': '<c-p>', 'help': 'Toggle a file''s persistent mark'})
+                    \ {'key': 16, 'agent': 'tmru#TogglePersistent',   'key_name': '<c-p>', 'submenu': 'Sticky', 'help': 'Toggle a file''s persistent mark'})
         call add(g:tmru#world.key_handlers,
-                    \ {'key': 21, 'agent': 'tmru#UnsetPersistent',   'key_name': '<c-u>', 'help': 'Unset a file''s persistent mark'})
+                    \ {'key': 21, 'agent': 'tmru#UnsetPersistent',   'key_name': '<c-u>', 'submenu': 'Sticky', 'help': 'Unset a file''s persistent mark'})
     endif
     if exists('g:tmru_world')
         let g:tmru#world = extend(g:tmru#world, g:tmru_world)
@@ -189,17 +195,33 @@ function! s:RemoveItems(filenames, ...) "{{{3
 endf
 
 
+function! s:IsNamedSession(session) "{{{3
+    return a:session =~ '\D'
+endf
+
+
 function! tmru#Session(session_no, mru) "{{{3
     " TLogVAR a:session_no
-    let session_no = empty(a:session_no) ? 1 : str2nr(a:session_no)
-    if session_no > 0
+    if empty(a:session_no)
+        let session = 1
+        let opt = 'sessions'
+    elseif s:IsNamedSession(a:session_no)
+        let session = a:session_no
+        let opt = 'sessionnames'
+    else
+        let session = str2nr(a:session_no)
+        let opt = 'sessions'
+    endif
+    " TLogVAR a:session_no, session, opt
+    if !empty(session)
         let filenames = []
         for [filename, props] in a:mru
             " TLogVAR filename, props
-            if index(get(props, 'sessions', []), session_no) != -1
+            if index(get(props, opt, []), session) != -1
                 call add(filenames, filename)
             endif
         endfor
+        " TLogVAR filenames
         call tmru#EditFiles(filenames)
     endif
 endf
@@ -372,9 +394,11 @@ function! tmru#PreviousSession(world, selected) "{{{3
         let fidx = tmruobj.FilenameIndex(filenames, filename)
         if fidx >= 0
             let props = tmruobj.mru[fidx][1]
-            if has_key(props, 'sessions')
-                let sessions = copy(props.sessions)
+            if has_key(props, 'sessions') || has_key(props, 'sessionnames')
+                let sessions = get(props, 'sessions', []) + get(props, 'sessionnames', [])
+                " TLogVAR sessions
                 let sessions = filter(sessions, 'index(sessions_done, v:val) == -1')
+                " TLogVAR sessions
                 if empty(sessions)
                     let session = 0
                 elseif len(sessions) == 1
@@ -382,7 +406,8 @@ function! tmru#PreviousSession(world, selected) "{{{3
                 else
                     let session = tlib#input#List('s', 'Select session:', sessions)
                 endif
-                if session > 0
+                " TLogVAR session
+                if !empty(session)
                     if empty(sessions_done)
                         call a:world.CloseScratch()
                     endif
@@ -400,5 +425,161 @@ function! tmru#PreviousSession(world, selected) "{{{3
     return a:world
 endf
 
+
+function! tmru#SelectNamedSession(world, selected) "{{{3
+    let sessionnames = tmru#SessionNames()
+    let session = tlib#input#List('s', 'Select session:', sessionnames)
+    if !empty(session)
+        let tmruobj = TmruObj()
+        let filenames = []
+        for item in tmruobj.mru
+            let names = get(get(item, 1, {}), 'sessionnames', [])
+            if index(names, session) != -1
+                call add(filenames, item[0])
+            endif
+        endfor
+        " TLogVAR filenames
+        if !empty(filenames)
+            call a:world.SelectItemsByNames('toggle', filenames)
+        endif
+        let a:world.state = 'display'
+    else
+        let a:world.state = 'redisplay'
+    endif
+    return a:world
+endf
+
+
+function! tmru#OpenNamedSession(world, selected) "{{{3
+    let sessionnames = tmru#SessionNames()
+    let session = tlib#input#List('s', 'Select session:', sessionnames)
+    if !empty(session)
+        call a:world.CloseScratch()
+        exec 'TRecentlyUsedFilesSessions' session
+        let a:world.state = 'exit'
+    else
+        let a:world.state = 'redisplay'
+    endif
+    return a:world
+endf
+
+
+function! tmru#SessionNames(...) "{{{3
+    if a:0 == 3
+        let [ArgLead, CmdLine, CursorPos] = a:000
+    else
+        let [ArgLead, CmdLine, CursorPos] = ['', '', 0]
+    endif
+    let tmruobj = TmruObj()
+    let filenames = exists('s:sessionnames_filenames') ? s:sessionnames_filenames : []
+    let mru = tmruobj.mru
+    if empty(mru)
+        let sessionnames = []
+    else
+        if empty(filenames)
+            let sessionnames = map(range(len(mru)), 'get(get(mru[v:val], 1, {}), "sessionnames", [])')
+        else
+            let items = filter(copy(mru), 'index(filenames, v:val[0]) != -1')
+            let sessionnames = map(items, 'get(get(v:val, 1, {}), "sessionnames", [])')
+        endif
+        let sessionnames = tlib#list#Flatten(sessionnames)
+        let sessionnames = tlib#list#Uniq(sessionnames)
+        if !empty(ArgLead)
+            let sessionnames = filter(sessionnames, 'stridx(v:val, ArgLead) != -1')
+        endif
+    endif
+    return sessionnames
+endf
+
+
+function! tmru#AddNamedSession(world, selected) "{{{3
+    let sessionname = input('Add session name(s): ', '', 'customlist,tmru#SessionNames')
+    if !empty(sessionname)
+        let tmruobj = TmruObj()
+        let add_sessionnames = split(sessionname, '\s*,\s*')
+        let tmruobj.mru = map(tmruobj.mru, 's:AddOrRemoveNamedSession(v:val, a:selected, add_sessionnames, [])')
+        call tmruobj.Save()
+        call tmruobj.SetBase(a:world)
+        let a:world.state = 'reset'
+    else
+        let a:world.state = 'redisplay'
+    endif
+    return a:world
+endf
+
+
+function! tmru#RemoveNamedSession(world, selected) "{{{3
+    let s:sessionnames_filenames = a:selected
+    try
+        let sessionname = input('Remove session name(s): ', '', 'customlist,tmru#SessionNames')
+    finally
+        unlet s:sessionnames_filenames
+    endtry
+    if !empty(sessionname)
+        let tmruobj = TmruObj()
+        let remove_sessionnames = split(sessionname, '\s*,\s*')
+        let tmruobj.mru = map(tmruobj.mru, 's:AddOrRemoveNamedSession(v:val, a:selected, [], remove_sessionnames)')
+        call tmruobj.Save()
+        call tmruobj.SetBase(a:world)
+        let a:world.state = 'reset'
+    else
+        let a:world.state = 'redisplay'
+    endif
+    return a:world
+endf
+
+
+function! s:AddOrRemoveNamedSession(item, filenames, add_sessionnames, remove_sessionnames) "{{{3
+    if index(a:filenames, a:item[0]) != -1
+        let props = get(a:item, 1, {})
+        let sessionnames0 = get(props, 'sessionnames', [])
+        let sessionnames1 = tlib#list#Uniq(sessionnames0 + a:add_sessionnames)
+        for name in a:remove_sessionnames
+            let idx = index(sessionnames1, name)
+            if idx != -1
+                call remove(sessionnames1, idx)
+            endif
+        endfor
+        if empty(sessionnames1)
+            if has_key(props, 'sessionnames')
+                call remove(props, 'sessionnames')
+                let a:item[1] = props
+            endif
+        elseif sessionnames1 != sessionnames0
+            let props.sessionnames = sessionnames1
+            let a:item[1] = props
+        endif
+    endif
+    return a:item
+endf
+
+
+function! tmru#EditNamedSessions(world, selected) "{{{3
+    let tmruobj = TmruObj()
+    let tmruobj.mru = map(tmruobj.mru, 's:EditNamedSessions(v:val, a:selected)')
+    call tmruobj.Save()
+    call tmruobj.SetBase(a:world)
+    let a:world.state = 'reset'
+    return a:world
+endfun
+
+
+function! s:EditNamedSessions(item, filenames) "{{{3
+    if index(a:filenames, a:item[0]) != -1
+        let filename = fnamemodify(a:item[0], ':t')
+        let props = get(a:item, 1, {})
+        let sessionnames0 = get(props, 'sessionnames', [])
+        let sessionnames = join(sessionnames0, ', ')
+        let prompt = printf("%s session names: ", filename)
+        let sessionnames = input(prompt, sessionnames)
+        if empty(sessionnames)
+            call remove(props, 'sessionnames')
+        else
+            let props.sessionnames = split(sessionnames, '\s*,\s*')
+        endif
+        let a:item[1] = props
+    endif
+    return a:item
+endf
 
 

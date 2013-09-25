@@ -3,18 +3,18 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2013-07-16.
-" @Revision:    857
+" @Last Change: 2013-09-25.
+" @Revision:    861
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
     finish
 endif
-if !exists('loaded_tlib') || loaded_tlib < 104
-    echoerr "tlib >= 1.04 is required"
+if !exists('loaded_tlib') || loaded_tlib < 106
+    echoerr "tlib >= 1.06 is required"
     finish
 endif
-let loaded_tmru = 100
+let loaded_tmru = 101
 
 
 if !exists("g:tmruMenu")
@@ -232,7 +232,7 @@ function! s:SetFilenameIndicators(world, mru) "{{{3
         if get(props, 'sticky', 0)
             call add(indicators, "s")
         endif
-        let sessions = get(props, 'sessions', [])
+        let sessions = get(props, 'sessions', []) + get(props, 'sessionnames', [])
         if !empty(sessions)
             call add(indicators, '-'. join(sessions, '-'))
         endif
