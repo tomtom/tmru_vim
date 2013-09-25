@@ -64,6 +64,7 @@ Contents~
         :TMRU .............................. |:TMRU|
         :TRecentlyUsedFilesEdit ............ |:TRecentlyUsedFilesEdit|
         :TRecentlyUsedFilesSessions ........ |:TRecentlyUsedFilesSessions|
+        g:tmru_select_filter ............... |g:tmru_select_filter|
         g:tmru#drop ........................ |g:tmru#drop|
         g:tmru#auto_remove_unreadable ...... |g:tmru#auto_remove_unreadable|
         tmru#SelectMRU ..................... |tmru#SelectMRU()|
@@ -78,6 +79,12 @@ Contents~
         tmru#UnsetPersistent ............... |tmru#UnsetPersistent()|
         tmru#TogglePersistent .............. |tmru#TogglePersistent()|
         tmru#PreviousSession ............... |tmru#PreviousSession()|
+        tmru#SelectNamedSession ............ |tmru#SelectNamedSession()|
+        tmru#OpenNamedSession .............. |tmru#OpenNamedSession()|
+        tmru#SessionNames .................. |tmru#SessionNames()|
+        tmru#AddNamedSession ............... |tmru#AddNamedSession()|
+        tmru#RemoveNamedSession ............ |tmru#RemoveNamedSession()|
+        tmru#EditNamedSessions ............. |tmru#EditNamedSessions()|
 
 
 ========================================================================
@@ -180,9 +187,14 @@ TmruObj(...)
 ========================================================================
 autoload/tmru.vim~
 
+                                                    *g:tmru_select_filter*
+g:tmru_select_filter           (default: '')
+    If non-empty, an expression to |filter()| the list of files.
+    Can also be buffer-local.
+
                                                     *g:tmru#drop*
-g:tmru#drop                    (default: 1)
-    If true, use |:drop| to edit loaded buffers.
+g:tmru#drop                    (default: has('gui'))
+    If true, use |:drop| to edit loaded buffers (only available with GUI).
 
                                                     *g:tmru#auto_remove_unreadable*
 g:tmru#auto_remove_unreadable  (default: 1)
@@ -227,6 +239,24 @@ tmru#TogglePersistent(world, selected)
 
                                                     *tmru#PreviousSession()*
 tmru#PreviousSession(world, selected)
+
+                                                    *tmru#SelectNamedSession()*
+tmru#SelectNamedSession(world, selected)
+
+                                                    *tmru#OpenNamedSession()*
+tmru#OpenNamedSession(world, selected)
+
+                                                    *tmru#SessionNames()*
+tmru#SessionNames(...)
+
+                                                    *tmru#AddNamedSession()*
+tmru#AddNamedSession(world, selected)
+
+                                                    *tmru#RemoveNamedSession()*
+tmru#RemoveNamedSession(world, selected)
+
+                                                    *tmru#EditNamedSessions()*
+tmru#EditNamedSessions(world, selected)
 
 
 
