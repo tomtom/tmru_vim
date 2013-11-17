@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2013-09-25.
-" @Revision:    285
+" @Revision:    286
 
 
 if !exists('g:tmru#world') "{{{2
@@ -256,7 +256,7 @@ endf
 
 function! s:SetSessions(item, ...) "{{{3
     let [filename, props] = a:item
-    let buflisted = a:0 >= 1 ? a:0 : buflisted(filename)
+    let buflisted = a:0 >= 1 ? a:0 : (bufexists(filename) && buflisted(filename))
     let sessions = get(props, 'sessions', [])
     if !empty(sessions)
         let sessions = map(sessions, 'v:val + 1')
