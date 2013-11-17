@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2013-09-25.
-" @Revision:    241
+" @Revision:    285
 
 
 if !exists('g:tmru#world') "{{{2
@@ -227,22 +227,50 @@ function! tmru#Session(session_no, mru) "{{{3
 endf
 
 
-function! tmru#SetSessions(def) "{{{3
-    let [filename, props] = a:def
+function! tmru#Leave() "{{{3
+    let tmruobj = TmruObj()
+    let filenames = tmruobj.GetFilenames()
+    let mru = deepcopy(tmruobj.mru)
+    let modified = []
+    for bufnr in range(1, bufnr('$'))
+        if buflisted(bufnr)
+            let bufname = fnamemodify(bufname(bufnr), ':p')
+            let [idx, item] = tmruobj.Find(bufname)
+            if idx != -1
+                let item1 = s:SetSessions(item)
+                let mru[idx] = item1
+                " TLogVAR item1
+                call add(modified, idx)
+            endif
+        endif
+    endfor
+    for idx in range(len(filenames))
+        if index(modified, idx) == -1
+            let mru[idx] = s:SetSessions(mru[idx])
+        endif
+    endfor
+    let tmruobj.mru = mru
+    call tmruobj.Save({'exit': 1})
+endf
+
+
+function! s:SetSessions(item, ...) "{{{3
+    let [filename, props] = a:item
+    let buflisted = a:0 >= 1 ? a:0 : buflisted(filename)
     let sessions = get(props, 'sessions', [])
     if !empty(sessions)
         let sessions = map(sessions, 'v:val + 1')
         let sessions = filter(sessions, 'v:val <= g:tmru_sessions')
     endif
-    if buflisted(filename)
+    if buflisted
         let sessions = insert(sessions, 1)
     endif
     if !empty(sessions)
-        let a:def[1].sessions = sessions
+        let a:item[1].sessions = sessions
     elseif has_key(props, 'sessions')
-        call remove(a:def[1], 'sessions')
+        call remove(a:item[1], 'sessions')
     endif
-    return a:def
+    return a:item
 endf
 
 

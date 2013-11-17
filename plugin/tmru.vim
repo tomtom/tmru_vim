@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2013-09-25.
-" @Revision:    861
+" @Revision:    891
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -155,28 +155,56 @@ if !exists('g:tmru_check_disk')
 endif
 
 
-function! TmruObj(...) "{{{3
-    let tmruobj = {}
-    function! tmruobj.Update(...) dict
-        let self.mru = call(function('s:MruRetrieve'), a:000)
-    endf
-    function! tmruobj.GetFilenames() dict
-        return map(copy(self.mru), 'v:val[0]')
-    endf
-    function! tmruobj.Save(...) dict
-        return call(function('s:MruStore'), [self.mru] + a:000)
-    endf
-    function! tmruobj.SetBase(world) dict
-        let a:world.base = self.GetFilenames()
-        if g:tmru#display_relative_filename
-            let basedir = getcwd()
-            let a:world.base = map(a:world.base, 'tlib#file#Relative(v:val, basedir)')
+let s:tmruobj_prototype = {}
+
+function! s:tmruobj_prototype.Update(...) dict
+    let self.mru = call(function('s:MruRetrieve'), a:000)
+endf
+
+function! s:tmruobj_prototype.GetFilenames() dict
+    return map(copy(self.mru), 'v:val[0]')
+endf
+
+function! s:tmruobj_prototype.Save(...) dict
+    return call(function('s:MruStore'), [self.mru] + a:000)
+endf
+
+function! s:tmruobj_prototype.Find(filename) dict
+    let filename = s:NormalizeFilename(a:filename)
+    let idx = 0
+    for item in self.mru
+        if item[0] == filename
+            return [idx, item]
         endif
-        call s:SetFilenameIndicators(a:world, self.mru)
-    endf
-    function! tmruobj.FilenameIndex(filenames, filename) "{{{3
-        return index(a:filenames, a:filename, 0, g:tmru_ignorecase)
-    endf
+        let idx += 1
+    endfor
+    return [-1, []]
+endf
+
+function! s:tmruobj_prototype.Set(idx, item) dict
+    let self.mru[a:idx] = a:item
+endf
+
+function! s:tmruobj_prototype.Get(idx) dict
+    return self.mru[a:idx]
+endf
+
+function! s:tmruobj_prototype.SetBase(world) dict
+    let a:world.base = self.GetFilenames()
+    if g:tmru#display_relative_filename
+        let basedir = getcwd()
+        let a:world.base = map(a:world.base, 'tlib#file#Relative(v:val, basedir)')
+    endif
+    call s:SetFilenameIndicators(a:world, self.mru)
+endf
+
+function! s:tmruobj_prototype.FilenameIndex(filenames, filename) "{{{3
+    return index(a:filenames, a:filename, 0, g:tmru_ignorecase)
+endf
+
+
+function! TmruObj(...) "{{{3
+    let tmruobj = copy(s:tmruobj_prototype)
     call call(tmruobj.Update, a:000, tmruobj)
     return tmruobj
 endf
@@ -234,7 +262,7 @@ function! s:SetFilenameIndicators(world, mru) "{{{3
         endif
         let sessions = get(props, 'sessions', []) + get(props, 'sessionnames', [])
         if !empty(sessions)
-            call add(indicators, '-'. join(sessions, '-'))
+            call add(indicators, '-'. join(sessions, g:tmru_sessions < 10 ? '' : '-'))
         endif
         if !empty(indicators)
             let fname = g:tmru#display_relative_filename ? a:world.base[idx] : filename
@@ -289,12 +317,12 @@ function! s:MruStore(mru, ...)
     endif
     if tmru_list != s:tmru_list
         let s:tmru_list = deepcopy(tmru_list)
-        " TLogVAR g:TMRU
-        " TLogVAR g:tmru_file
         if !get(props, 'exit', 0)
             call s:BuildMenu(0)
         endif
+        " TLogVAR g:tmru_file
         if empty(g:tmru_file)
+            " TLogVAR g:TMRU
             if g:tmru_update_viminfo
                 let g:TMRU = join(map(s:tmru_list, 'v:val[0]'), "\n")
                 wviminfo
@@ -414,11 +442,6 @@ if g:tmru_sessions > 0
     " This command is only available if g:tmru_sessions > 0.
     command! -nargs=? TRecentlyUsedFilesSessions call tmru#Session(<q-args>, TmruObj().mru)
 
-    autocmd tmru VimLeave * 
-                \ let s:tmruobj = TmruObj() |
-                \ let s:tmruobj.mru = map(deepcopy(s:tmruobj.mru), 'tmru#SetSessions(v:val)') |
-                \ call s:tmruobj.Save({'exit': 1}) |
-                \ unlet s:tmruobj
-
+    autocmd tmru VimLeave * call tmru#Leave()
 endif
 
