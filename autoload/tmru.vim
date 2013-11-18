@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2013-09-25.
-" @Revision:    286
+" @Revision:    289
 
 
 if !exists('g:tmru#world') "{{{2
@@ -237,7 +237,7 @@ function! tmru#Leave() "{{{3
             let bufname = fnamemodify(bufname(bufnr), ':p')
             let [idx, item] = tmruobj.Find(bufname)
             if idx != -1
-                let item1 = s:SetSessions(item)
+                let item1 = s:SetSessions(item, 1)
                 let mru[idx] = item1
                 " TLogVAR item1
                 call add(modified, idx)
@@ -246,7 +246,7 @@ function! tmru#Leave() "{{{3
     endfor
     for idx in range(len(filenames))
         if index(modified, idx) == -1
-            let mru[idx] = s:SetSessions(mru[idx])
+            let mru[idx] = s:SetSessions(mru[idx], 0)
         endif
     endfor
     let tmruobj.mru = mru
@@ -256,7 +256,7 @@ endf
 
 function! s:SetSessions(item, ...) "{{{3
     let [filename, props] = a:item
-    let buflisted = a:0 >= 1 ? a:0 : (bufexists(filename) && buflisted(filename))
+    let buflisted = a:0 >= 1 ? a:0 : buflisted(filename)
     let sessions = get(props, 'sessions', [])
     if !empty(sessions)
         let sessions = map(sessions, 'v:val + 1')
