@@ -64,6 +64,7 @@ Contents~
         :TMRU .............................. |:TMRU|
         :TRecentlyUsedFilesEdit ............ |:TRecentlyUsedFilesEdit|
         :TRecentlyUsedFilesSessions ........ |:TRecentlyUsedFilesSessions|
+        g:tmru#sessions_len ................ |g:tmru#sessions_len|
         g:tmru_select_filter ............... |g:tmru_select_filter|
         g:tmru#drop ........................ |g:tmru#drop|
         g:tmru#auto_remove_unreadable ...... |g:tmru#auto_remove_unreadable|
@@ -71,7 +72,7 @@ Contents~
         tmru#EditMRU ....................... |tmru#EditMRU()|
         tmru#EditFiles ..................... |tmru#EditFiles()|
         tmru#Session ....................... |tmru#Session()|
-        tmru#SetSessions ................... |tmru#SetSessions()|
+        tmru#Leave ......................... |tmru#Leave()|
         tmru#DisplayUnreadableFiles ........ |tmru#DisplayUnreadableFiles()|
         tmru#CheckFilenames ................ |tmru#CheckFilenames()|
         tmru#RemoveItem .................... |tmru#RemoveItem()|
@@ -102,7 +103,7 @@ g:tmruMenuSize                 (default: 20)
                                                     *g:tmru_sessions*
 g:tmru_sessions                (default: 9)
     If greater than zero, make tmru to save the file list opened when 
-    closing vim. Save at most information for N sessions.
+    closing vim. Save at most information for the N latest sessions.
 
     Setting this variable to 0, disables this feature.
 
@@ -187,6 +188,10 @@ TmruObj(...)
 ========================================================================
 autoload/tmru.vim~
 
+                                                    *g:tmru#sessions_len*
+g:tmru#sessions_len            (default: 3)
+    Remember at most N sessions per file.
+
                                                     *g:tmru_select_filter*
 g:tmru_select_filter           (default: '')
     If non-empty, an expression to |filter()| the list of files.
@@ -213,8 +218,8 @@ tmru#EditFiles(filenames, ...)
                                                     *tmru#Session()*
 tmru#Session(session_no, mru)
 
-                                                    *tmru#SetSessions()*
-tmru#SetSessions(def)
+                                                    *tmru#Leave()*
+tmru#Leave()
 
                                                     *tmru#DisplayUnreadableFiles()*
 tmru#DisplayUnreadableFiles(mru)

@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2013-09-25.
-" @Revision:    891
+" @Last Change: 2013-12-03.
+" @Revision:    897
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -32,7 +32,7 @@ endif
 
 if !exists('g:tmru_sessions')
     " If greater than zero, make tmru to save the file list opened when 
-    " closing vim. Save at most information for N sessions.
+    " closing vim. Save at most information for the N latest sessions.
     "
     " Setting this variable to 0, disables this feature.
     "
