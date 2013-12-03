@@ -3,7 +3,13 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2013-09-25.
-" @Revision:    289
+" @Revision:    297
+
+
+if !exists('g:tmru#sessions_len')
+    " Remember at most N sessions per file.
+    let g:tmru#sessions_len = 3   "{{{2
+endif
 
 
 if !exists('g:tmru#world') "{{{2
@@ -72,7 +78,7 @@ endif
 
 function! tmru#SelectMRU()
     " TLogDBG "SelectMRU#1"
-   let tmruobj = TmruObj()
+    let tmruobj = TmruObj()
     if !empty(tmruobj.mru)
         " TLogDBG "SelectMRU#2"
         let w0 = exists('b:tmru_world') ? extend(copy(g:tmru#world), b:tmru_world) : g:tmru#world
@@ -244,6 +250,7 @@ function! tmru#Leave() "{{{3
             endif
         endif
     endfor
+    " TLogVAR modified
     for idx in range(len(filenames))
         if index(modified, idx) == -1
             let mru[idx] = s:SetSessions(mru[idx], 0)
@@ -254,16 +261,18 @@ function! tmru#Leave() "{{{3
 endf
 
 
-function! s:SetSessions(item, ...) "{{{3
+function! s:SetSessions(item, buflisted) "{{{3
     let [filename, props] = a:item
-    let buflisted = a:0 >= 1 ? a:0 : buflisted(filename)
     let sessions = get(props, 'sessions', [])
     if !empty(sessions)
         let sessions = map(sessions, 'v:val + 1')
         let sessions = filter(sessions, 'v:val <= g:tmru_sessions')
     endif
-    if buflisted
+    if a:buflisted
         let sessions = insert(sessions, 1)
+    endif
+    if g:tmru#sessions_len > 0
+        let sessions = sessions[0 : g:tmru#sessions_len - 1]
     endif
     if !empty(sessions)
         let a:item[1].sessions = sessions
