@@ -2,8 +2,13 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2013-09-25.
-" @Revision:    297
+" @Last Change: 2013-12-04.
+" @Revision:    303
+
+
+if !exists('g:tmru#set_filename_indicators')
+    let g:tmru#set_filename_indicators = 1   "{{{2
+endif
 
 
 if !exists('g:tmru#sessions_len')
@@ -617,6 +622,31 @@ function! s:EditNamedSessions(item, filenames) "{{{3
         let a:item[1] = props
     endif
     return a:item
+endf
+
+
+function! tmru#SetFilenameIndicators(world, mru) "{{{3
+    if g:tmru#set_filename_indicators
+        let a:world.filename_indicators = {}
+        let idx = 0
+        for item in a:mru
+            let [filename, props] = item
+            let indicators = []
+            if get(props, 'sticky', 0)
+                call add(indicators, "s")
+            endif
+            let sessions = get(props, 'sessions', []) + get(props, 'sessionnames', [])
+            if !empty(sessions)
+                call add(indicators, '-'. join(sessions, g:tmru_sessions < 10 ? '' : '-'))
+            endif
+            if !empty(indicators)
+                let fname = g:tmru#display_relative_filename ? a:world.base[idx] : filename
+                " TLogVAR fname, indicators
+                let a:world.filename_indicators[fname] = join(indicators, '')
+            endif
+            let idx += 1
+        endfor
+    endif
 endf
 
 

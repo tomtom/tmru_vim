@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2013-12-03.
-" @Revision:    897
+" @Last Change: 2014-01-16.
+" @Revision:    900
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -195,7 +195,7 @@ function! s:tmruobj_prototype.SetBase(world) dict
         let basedir = getcwd()
         let a:world.base = map(a:world.base, 'tlib#file#Relative(v:val, basedir)')
     endif
-    call s:SetFilenameIndicators(a:world, self.mru)
+    call tmru#SetFilenameIndicators(a:world, self.mru)
 endf
 
 function! s:tmruobj_prototype.FilenameIndex(filenames, filename) "{{{3
@@ -248,29 +248,6 @@ function! s:MruRetrieve(...)
         let s:last_auto_filename = ''
     endif
     return s:tmru_list
-endf
-
-
-function! s:SetFilenameIndicators(world, mru) "{{{3
-    let a:world.filename_indicators = {}
-    let idx = 0
-    for item in a:mru
-        let [filename, props] = item
-        let indicators = []
-        if get(props, 'sticky', 0)
-            call add(indicators, "s")
-        endif
-        let sessions = get(props, 'sessions', []) + get(props, 'sessionnames', [])
-        if !empty(sessions)
-            call add(indicators, '-'. join(sessions, g:tmru_sessions < 10 ? '' : '-'))
-        endif
-        if !empty(indicators)
-            let fname = g:tmru#display_relative_filename ? a:world.base[idx] : filename
-            " TLogVAR fname, indicators
-            let a:world.filename_indicators[fname] = join(indicators, '')
-        endif
-        let idx += 1
-    endfor
 endf
 
 
@@ -415,7 +392,11 @@ endf
 
 augroup tmru
     autocmd!
-    autocmd VimEnter * call s:BuildMenu(1)
+    if has('vim_starting')
+        autocmd VimEnter * call s:BuildMenu(1)
+    else
+        call s:BuildMenu(1)
+    endif
     for [s:event, s:props] in items(g:tmru_events)
         exec 'autocmd '. s:event .' * call s:RegisterFile(expand("<afile>:p"), '. string(s:event) .', '. string(s:props) .')'
     endfor
