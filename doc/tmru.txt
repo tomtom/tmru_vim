@@ -64,6 +64,7 @@ Contents~
         :TMRU .............................. |:TMRU|
         :TRecentlyUsedFilesEdit ............ |:TRecentlyUsedFilesEdit|
         :TRecentlyUsedFilesSessions ........ |:TRecentlyUsedFilesSessions|
+        g:tmru#set_filename_indicators ..... |g:tmru#set_filename_indicators|
         g:tmru#sessions_len ................ |g:tmru#sessions_len|
         g:tmru_select_filter ............... |g:tmru_select_filter|
         g:tmru#drop ........................ |g:tmru#drop|
@@ -86,6 +87,7 @@ Contents~
         tmru#AddNamedSession ............... |tmru#AddNamedSession()|
         tmru#RemoveNamedSession ............ |tmru#RemoveNamedSession()|
         tmru#EditNamedSessions ............. |tmru#EditNamedSessions()|
+        tmru#SetFilenameIndicators ......... |tmru#SetFilenameIndicators()|
 
 
 ========================================================================
@@ -188,6 +190,9 @@ TmruObj(...)
 ========================================================================
 autoload/tmru.vim~
 
+                                                    *g:tmru#set_filename_indicators*
+g:tmru#set_filename_indicators (default: 1)
+
                                                     *g:tmru#sessions_len*
 g:tmru#sessions_len            (default: 3)
     Remember at most N sessions per file.
@@ -262,6 +267,9 @@ tmru#RemoveNamedSession(world, selected)
 
                                                     *tmru#EditNamedSessions()*
 tmru#EditNamedSessions(world, selected)
+
+                                                    *tmru#SetFilenameIndicators()*
+tmru#SetFilenameIndicators(world, mru)
 
 
 
