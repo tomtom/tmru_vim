@@ -123,3 +123,7 @@ version: "1.00"
   MD5 checksum: f526a3b4c97827e0c51388a916b2f4aa
 version: "1.01"
 
+version: "1.02"
+  Please see http://github.com/tomtom/tmru_vim/commits/master/
+  MD5 checksum: a3bc711445407a837eb3f407454451b2
+
