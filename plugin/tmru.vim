@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2014-01-16.
-" @Revision:    900
+" @Revision:    901
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -14,7 +14,7 @@ if !exists('loaded_tlib') || loaded_tlib < 106
     echoerr "tlib >= 1.06 is required"
     finish
 endif
-let loaded_tmru = 101
+let loaded_tmru = 102
 
 
 if !exists("g:tmruMenu")
