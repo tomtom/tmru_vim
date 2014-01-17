@@ -11,7 +11,7 @@ via the :TRecentlyUsedFiles command. The list can be easily filtered.
 Users can optionally use fuzzy patterns, which is not enabled by 
 default though (see |g:tlib#input#filter_mode|).
 
-Files can be groups in sessions:
+Files can be grouped in sessions:
 
      - Use named sessions to group files that are frequently edited 
        together

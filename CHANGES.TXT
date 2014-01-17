@@ -105,6 +105,7 @@ version: "1.00"
   - Make sure to register file's that are already opened when tmru is loaded
   MD5 checksum: 82ed5a7b285c6ca1ec7bd0a2d5795039
 
+version: "1.01"
   - addon-info
   - Use cwd as base directory for relative filenames (fixes #30)
   - Enable configuration via g:tmru_world (fixes #31)
@@ -121,7 +122,6 @@ version: "1.00"
   - g:tmru#sessions_len: Trim list of numbered sessions
   - g:tmru#set_filename_indicators
   MD5 checksum: f526a3b4c97827e0c51388a916b2f4aa
-version: "1.01"
 
 version: "1.02"
   Please see http://github.com/tomtom/tmru_vim/commits/master/
