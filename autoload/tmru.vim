@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2013-12-04.
-" @Revision:    303
+" @Revision:    308
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -95,6 +95,11 @@ function! tmru#SelectMRU()
         if !empty(select_filter)
             let world.base = filter(world.base, select_filter)
         endif
+        let stickyn = len(filter(copy(tmruobj.mru), 'get(v:val[1], "sticky", 0)'))
+        if stickyn < len(tmruobj.mru)
+            let stickyn += 1
+        endif
+        let world.initial_index = stickyn
         " TLogDBG "SelectMRU#4"
         let bs    = tlib#input#ListW(world)
         " TLogDBG "SelectMRU#5"
