@@ -6,6 +6,21 @@ the file list by typing a pattern. Users can open multiple files at
 once. The list of recently used files is synchronized across multiple 
 instances of (g)vim running simultaneously.
 
+By default, tmru will remember 500 files (see |g:tmruSize|) accessible 
+via the :TRecentlyUsedFiles command. The list can be easily filtered. 
+Users can optionally use fuzzy patterns, which is not enabled by 
+default though (see |g:tlib#input#filter_mode|).
+
+Files can be groups in sessions:
+
+     - Use named sessions to group files that are frequently edited 
+       together
+     - Use numbered sessions to open files you edited during one of the
+       latest editing sessions
+
+Files can be marked as "sticky" -- they will never be removed from the 
+list.
+
 :TRecentlyUsedFiles ... open one or more recently used file(s)
 :TRecentlyUsedFilesEdit ... edit the mru list
 
