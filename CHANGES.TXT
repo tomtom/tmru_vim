@@ -105,3 +105,21 @@ version: "1.00"
   - Make sure to register file's that are already opened when tmru is loaded
   MD5 checksum: 82ed5a7b285c6ca1ec7bd0a2d5795039
 
+  - addon-info
+  - Use cwd as base directory for relative filenames (fixes #30)
+  - Enable configuration via g:tmru_world (fixes #31)
+  - FIX for previous commit
+  - Make automatic removal on non-existing files configurable & consistent: g:tmru#auto_remove_unreadable (fixes #32)
+  - Only use `:drop` with GUI enabled
+  - Support for b:tmru_world
+  - Support for g:tmru_select_filter (and b:tmru_select_filter) (fixes #34)
+  - Support for named sessions (requires tlib 1.06)
+  - Help template
+  - Don't call buflisted() on all files in the tmru list (fixes #36)
+  - s:SetSessions(): Use (bufexists(filename) && buflisted(filename)
+  - Really call buflisted() only for vim buffers (fixes #36)
+  - g:tmru#sessions_len: Trim list of numbered sessions
+  - g:tmru#set_filename_indicators
+  MD5 checksum: f526a3b4c97827e0c51388a916b2f4aa
+version: "1.01"
+
