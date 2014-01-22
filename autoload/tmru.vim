@@ -2,8 +2,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2013-12-04.
-" @Revision:    308
+" @Last Change: 2014-01-20.
+" @Revision:    311
 
 
 if !exists('g:tmru#set_filename_indicators')
