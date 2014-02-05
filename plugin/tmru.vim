@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2014-01-16.
-" @Revision:    901
+" @Last Change: 2014-02-05.
+" @Revision:    903
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -15,6 +15,9 @@ if !exists('loaded_tlib') || loaded_tlib < 106
     finish
 endif
 let loaded_tmru = 102
+
+let s:save_cpo = &cpo
+set cpo&vim
 
 
 if !exists("g:tmruMenu")
@@ -426,3 +429,6 @@ if g:tmru_sessions > 0
     autocmd tmru VimLeave * call tmru#Leave()
 endif
 
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
