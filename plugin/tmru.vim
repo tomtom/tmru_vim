@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2014-02-05.
-" @Revision:    907
+" @Revision:    908
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -140,6 +140,7 @@ if !exists("g:tmruExclude") "{{{2
                 \ . '\|'. s:PS .'quickfix$'
                 \ . '\|__.\{-}__$'
                 \ . '\|^fugitive:'
+                \ . '\|/truecrypt\d\+/'
                 \ . '\|' . substitute(escape(&suffixes, '~.*$^'), '\\\@<!,', '$\\|', 'g') .'$' " &suffixes, ORed (split on (not escaped) comma)
     unlet s:PS
 endif
