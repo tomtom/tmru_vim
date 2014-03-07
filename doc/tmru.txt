@@ -128,8 +128,10 @@ g:tmru_sessions                (default: 9)
 
                                                     *g:tmru#display_relative_filename*
 g:tmru#display_relative_filename (default: 0)
-    If true, display the relative filename. This requires 
-    |g:tlib#input#format_filename| to be set to "r".
+    If true, display the relative filename.
+
+    If this options is used with |g:tlib#input#format_filename| set to 
+    "l", |g:tlib_inputlist_filename_indicators| doesn't work.
 
                                                     *g:tmru_single_instance_mode*
 g:tmru_single_instance_mode    (default: 0)

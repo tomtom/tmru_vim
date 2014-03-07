@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2014-02-05.
-" @Revision:    903
+" @Revision:    907
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -45,8 +45,10 @@ endif
 
 
 if !exists('g:tmru#display_relative_filename')
-    " If true, display the relative filename. This requires 
-    " |g:tlib#input#format_filename| to be set to "r".
+    " If true, display the relative filename.
+    "
+    " If this options is used with |g:tlib#input#format_filename| set to 
+    " "l", |g:tlib_inputlist_filename_indicators| doesn't work.
     let g:tmru#display_relative_filename = 0   "{{{2
 endif
 
