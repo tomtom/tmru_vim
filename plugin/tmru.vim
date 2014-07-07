@@ -93,7 +93,7 @@ if !exists("g:tmru_events")
         unlet g:tmruEvents
     else
         let g:tmru_events = {
-                    \ 'VimLeave':     {'load': 0, 'register': 0, 'save': g:tmru_single_instance_mode, 'exit': 1},
+                    \ 'VimLeave':     {'load': 0, 'register': 0, 'save': 1, 'exit': 1},
                     \ 'FocusGained':  {'load': 1, 'register': 0, 'save': !g:tmru_single_instance_mode},
                     \ 'FocusLost':    {'load': 0, 'register': 0, 'save': !g:tmru_single_instance_mode},
                     \ 'BufWritePost': {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode},
