@@ -2,8 +2,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2014-01-20.
-" @Revision:    311
+" @Last Change: 2014-07-07.
+" @Revision:    320
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -391,13 +391,12 @@ endf
 
 function! tmru#UnsetPersistent(world, selected) "{{{3
     let tmruobj = TmruObj()
+    let mru = tmruobj.mru
     let filenames = tmruobj.GetFilenames()
     for filename in a:selected
-        let fidx = tmruobj.FilenameIndex(filenames, filename)
-        " TLogVAR filename, fidx
-        if fidx >= 0
-            let tmruobj.mru[fidx][1]['sticky'] = 0
-        endif
+        let [oldpos, item] = TmruGetItem(tmruobj, filename)
+        let item[1]['sticky'] = 0
+        let [must_update, tmruobj.mru] = TmruInsert(tmruobj, oldpos, item)
     endfor
     call tmruobj.Save()
     call tmruobj.SetBase(a:world)
@@ -411,14 +410,12 @@ function! tmru#TogglePersistent(world, selected) "{{{3
     let filenames = tmruobj.GetFilenames()
     let msgs = []
     for filename in a:selected
+        let [oldpos, item] = TmruGetItem(tmruobj, filename)
+        let item[1]['sticky'] = !get(item[1], 'sticky', 0)
+        call add(msgs, printf('Mark %ssticky: %s', item[1]['sticky'] ? '' : 'not ', filename))
+        let [must_update, tmruobj.mru] = TmruInsert(tmruobj, oldpos, item)
         let fidx = tmruobj.FilenameIndex(filenames, filename)
         " TLogVAR filename, fidx
-        if fidx >= 0
-            let props = tmruobj.mru[fidx][1]
-            let props['sticky'] = !get(props, 'sticky', 0)
-            call add(msgs, printf('Mark %ssticky: %s', props.sticky ? '' : 'not ', filename))
-            let tmruobj.mru[fidx][1] = props
-        endif
     endfor
     if !empty(msgs)
         echom join(msgs, "\n")

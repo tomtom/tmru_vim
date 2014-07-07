@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2014-02-05.
-" @Revision:    908
+" @Revision:    910
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -292,12 +292,14 @@ endf
 function! s:MruStore(mru, ...)
     " TLogVAR g:tmru_file
     let props = a:0 >= 1 ? a:1 : {}
-    let tmru_list = s:MruSort(a:mru)[0 : g:tmruSize]
+    let tmru_list = a:mru
     if get(props, 'exit', 0)
+        let tmru_list = s:MruSort(tmru_list)
         " echom "DBG tmru_list != s:tmru_list" (tmru_list != s:tmru_list)
         " echom "DBG tmru_list != s:tmru_list" (string(tmru_list) != string(s:tmru_list))
         " echom "DBG tmru_list" string(filter(copy(tmru_list), 'has_key(v:val[1], "sessions")'))
     endif
+    let tmru_list = tmru_list[0 : g:tmruSize]
     if tmru_list != s:tmru_list
         let s:tmru_list = deepcopy(tmru_list)
         if !get(props, 'exit', 0)
@@ -338,11 +340,17 @@ endf
 
 
 function! s:MruSorter(i1, i2) "{{{3
-    let s1 = get(a:i1[1], 'sticky', 0)
-    let s2 = get(a:i2[1], 'sticky', 0)
-    let p1 = get(a:i1[1], 'pos')
-    let p2 = get(a:i2[1], 'pos')
-    return s1 == s2 ? (p1 == p2 ? 0 : p1 > p2 ? 1 : -1) : s1 > s2 ? -1 : 1
+    let i11 = a:i1[1]
+    let i21 = a:i2[1]
+    let s1 = get(i11, 'sticky', 0)
+    let s2 = get(i21, 'sticky', 0)
+    if s1 == s2
+        let p1 = get(i11, 'pos')
+        let p2 = get(i21, 'pos')
+        return p1 == p2 ? 0 : p1 > p2 ? 1 : -1
+    else
+        return s1 > s2 ? -1 : 1
+    endif
 endf
 
 
@@ -375,23 +383,59 @@ function! s:MruRegister(filename, props)
         return
     endif
     let tmruobj = TmruObj(get(a:props, 'load', 0))
-    let mru = copy(tmruobj.mru)
-    let filenames = tmruobj.GetFilenames()
-    let imru = tmruobj.FilenameIndex(filenames, filename)
+    let [oldpos, item] = TmruGetItem(tmruobj, filename)
+    let [must_update, mru] = TmruInsert(tmruobj, oldpos, item)
+    if must_update
+        let tmruobj.mru = mru
+        call tmruobj.Save(a:props)
+    endif
+endf
+
+
+function! TmruGetItem(tmruobj, filename) "{{{3
+    " TLogVAR a:filename
+    let filenames = a:tmruobj.GetFilenames()
+    let imru = a:tmruobj.FilenameIndex(filenames, a:filename)
     " TLogVAR imru
-    if imru != 0
-        if imru == -1
-            let item = [filename, {}]
-        else
-            let item = remove(mru, imru)
+    if imru == -1
+        let item = [a:filename, {}]
+    else
+        let item = get(a:tmruobj.mru, imru)
+    endif
+    " TLogVAR imru, item
+    return [imru, item]
+endf
+
+
+function! TmruInsert(tmruobj, oldpos, item) "{{{3
+    " TLogVAR a:oldpos, a:item
+    " echom "DBG" get(a:item[1], "sticky", 0)
+    let newpos = 0
+    if !get(a:item[1], 'sticky', 0)
+        for mruitem in a:tmruobj.mru
+            " TLogVAR mruitem
+            if get(mruitem[1], 'sticky', 0)
+                let newpos += 1
+            elseif mruitem[0] == a:item[0]
+            else
+                break
+            endif
+        endfor
+    endif
+    " TLogVAR newpos
+    if a:oldpos == newpos
+        return [0, a:tmruobj.mru]
+    else
+        let mru = copy(a:tmruobj.mru)
+        if a:oldpos != -1
+            if mru[a:oldpos] != a:item
+                throw 'TMRU: Inconsistent state'
+            endif
+            call remove(mru, a:oldpos)
         endif
-        " TLogVAR imru, item
-        call insert(mru, item)
-        if mru != tmruobj.mru
-            " TLogVAR mru
-            let tmruobj.mru = mru
-            call tmruobj.Save(a:props)
-        endif
+        call insert(mru, a:item, newpos)
+        " TLogVAR imru
+        return [mru != a:tmruobj.mru, mru]
     endif
 endf
 
