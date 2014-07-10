@@ -127,3 +127,11 @@ version: "1.02"
   Please see http://github.com/tomtom/tmru_vim/commits/master/
   MD5 checksum: a3bc711445407a837eb3f407454451b2
 
+  - Set the initial index in the list view to the first non-sticky file
+  - FIX #37: Clarfiy doc of g:tmru#display_relative_filename
+  - Exclude files on truecrypt volumes (linux)
+  - Always enable save on exit
+  - FIX #40: Insert files at the right position; sort list only on exit
+  MD5 checksum: 89f6d47aa31a9df4022bc3e78f887fec
+version: "1.03"
+
