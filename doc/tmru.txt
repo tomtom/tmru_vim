@@ -75,6 +75,8 @@ Contents~
         g:tmru_ignorecase .................. |g:tmru_ignorecase|
         g:tmru_check_disk .................. |g:tmru_check_disk|
         TmruObj ............................ |TmruObj()|
+        TmruGetItem ........................ |TmruGetItem()|
+        TmruInsert ......................... |TmruInsert()|
         :TRecentlyUsedFiles ................ |:TRecentlyUsedFiles|
         :TMRU .............................. |:TMRU|
         :TRecentlyUsedFilesEdit ............ |:TRecentlyUsedFilesEdit|
@@ -186,6 +188,12 @@ g:tmru_check_disk              (default: 1)
                                                     *TmruObj()*
 TmruObj(...)
 
+                                                    *TmruGetItem()*
+TmruGetItem(tmruobj, filename)
+
+                                                    *TmruInsert()*
+TmruInsert(tmruobj, oldpos, item)
+
                                                     *:TRecentlyUsedFiles*
 :TRecentlyUsedFiles
     Display the MRU list.
@@ -290,4 +298,4 @@ tmru#SetFilenameIndicators(world, mru)
 
 
 
-vim:tw=78:fo=tcq2:isk=!-~,^*,^|,^":ts=8:ft=help:norl:
+vim:tw=78:fo=w2croql:isk=!-~,^*,^|,^":ts=8:ft=help:norl:
