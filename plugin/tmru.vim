@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2014-02-05.
-" @Revision:    911
+" @Revision:    1006
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -62,6 +62,16 @@ if !exists('g:tmru_single_instance_mode')
 endif
 
 
+if !exists('g:tmru_eager_save')
+    " If true, save the mru list more often.
+    "
+    " If you run multiple instances of vim, synchronization of mru lists 
+    " relies on |FocusGained| and |FocusLost| events but this probably 
+    " does not work in all circumstances.
+    let g:tmru_eager_save = !g:tmru_single_instance_mode && !has('gui_running')   "{{{2
+endif
+
+
 if !exists('g:tmru_update_viminfo')
     " If true, load and save the viminfo file on certain events -- see 
     " |g:tmru_events|.
@@ -77,14 +87,14 @@ if !exists("g:tmru_events")
     "
     " load ....... Load the external representation from disk
     " register ... Register the current buffer
-    " save ....... Save mru list to disk (currently ignored)
+    " save ....... If true, save mru list to disk
     "
     " :read: let g:tmru_events = {...} "{{{2
     if exists('g:tmruEvents')  " backwards compatibility
         if type(g:tmruEvents) == 1
             let g:tmru_events = {}
             for s:ev in g:tmruEvents
-                let g:tmru_events[s:ev] = {'load': 0, 'register': 1, 'save': 1}
+                let g:tmru_events[s:ev] = {'load': 0, 'register': 1, 'save': 0}
             endfor
             unlet s:ev
         else
@@ -94,27 +104,26 @@ if !exists("g:tmru_events")
     else
         let g:tmru_events = {
                     \ 'VimLeave':     {'load': 0, 'register': 0, 'save': 1, 'exit': 1},
-                    \ 'FocusGained':  {'load': 1, 'register': 0, 'save': !g:tmru_single_instance_mode},
+                    \ 'FocusGained':  {'load': !g:tmru_single_instance_mode, 'register': 0, 'save': 0},
                     \ 'FocusLost':    {'load': 0, 'register': 0, 'save': !g:tmru_single_instance_mode},
-                    \ 'BufWritePost': {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode},
-                    \ 'BufReadPost':  {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode}, 
-                    \ 'BufWinEnter':  {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode},
-                    \ 'BufEnter':     {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode},
-                    \ 'BufDelete':    {'load': 0, 'register': 1, 'save': !g:tmru_single_instance_mode}
+                    \ 'BufWritePost': {'load': 0, 'register': 1, 'save': g:tmru_eager_save},
+                    \ 'BufReadPost':  {'load': 0, 'register': 1, 'save': g:tmru_eager_save},
+                    \ 'BufWinEnter':  {'load': 0, 'register': 1, 'save': g:tmru_eager_save},
+                    \ 'BufEnter':     {'load': 0, 'register': 1, 'save': g:tmru_eager_save},
+                    \ 'BufDelete':    {'load': 0, 'register': 1, 'save': g:tmru_eager_save}
                     \ }
     endif
 endif
 
 
 if !exists("g:tmru_file")
-    if stridx(&viminfo, '!') == -1
-        " Where to save the file list. The default value is only 
-        " effective, if 'viminfo' doesn't contain '!' -- in which case 
-        " the 'viminfo' will be used.
-        let g:tmru_file = tlib#persistent#Filename('tmru', 'files', 1) "{{{2
-    else
-        let g:tmru_file = ''
-    endif
+    " Where to save the file list. The default value is only 
+    " effective, if 'viminfo' doesn't contain '!' -- in which case 
+    " the 'viminfo' will be used.
+    "
+    " CAUTION: The use of viminfo may result in various problems 
+    " when you run several instances of vim at once.
+    let g:tmru_file = tlib#persistent#Filename('tmru', 'files', 1) "{{{2
 endif
 
 
@@ -161,19 +170,93 @@ if !exists('g:tmru_check_disk')
 endif
 
 
+let s:tmru_must_save = 0
 let s:tmruobj_prototype = {}
 
-function! s:tmruobj_prototype.Update(...) dict
-    let self.mru = call(function('s:MruRetrieve'), a:000)
+
+function! s:tmruobj_prototype.MustLoad(...) dict
+    let must_load = a:0 >= 1 ? a:1 : 0
+    " TLogVAR must_load
+    if !empty(g:tmru_file)
+        if must_load
+            if exists('s:tmru_mtime') && getftime(g:tmru_file) == s:tmru_mtime
+                let must_load = 0
+            endif
+        elseif !exists('s:tmru_mtime') || getftime(g:tmru_file) != s:tmru_mtime
+            let must_load = 1
+        endif
+    endif
+    return must_load
 endf
+
+
+function! s:tmruobj_prototype.Load() dict
+    " TLogDBG "Load"
+    if empty(g:tmru_file)
+        if exists("g:TMRU")
+            if g:tmru_update_viminfo
+                " TLogVAR g:tmru_update_viminfo
+                rviminfo
+            endif
+        endif
+        if !exists("g:TMRU")
+            let g:TMRU = ''
+        endif
+        let s:tmru_list = map(split(g:TMRU, '\n'), '[v:val, {}]')
+    else
+        " TLogVAR g:tmru_file
+        if s:tmru_must_save
+            echohl WarningMsg
+            echohl "TMRU: Internal error: Synchronization error (Please report)"
+            echohl NONE
+        endif
+        let data = tlib#persistent#Get(g:tmru_file)
+        let s:tmru_mtime = getftime(g:tmru_file)
+        if get(data, 'version', 0) == 0
+            let s:tmru_list = map(split(get(data, 'tmru', ''), '\n'), '[v:val, {}]')
+        else
+            let s:tmru_list = get(data, 'tmru', [])
+        endif
+    endif
+    let s:last_auto_filename = ''
+    let s:tmru_must_save = 0
+    let self.mru = s:tmru_list
+endf
+
 
 function! s:tmruobj_prototype.GetFilenames() dict
     return map(copy(self.mru), 'v:val[0]')
 endf
 
+
 function! s:tmruobj_prototype.Save(...) dict
-    return call(function('s:MruStore'), [self.mru] + a:000)
+    let props = a:0 >= 1 ? a:1 : {}
+    " TLogVAR props
+    let tmru_list = self.mru
+    " echom "DBG must_save" s:tmru_must_save
+    if s:tmru_must_save
+        if len(tmru_list) > g:tmruSize
+            let tmru_list = tmru_list[0 : g:tmruSize - 1]
+        endif
+        let s:tmru_list = deepcopy(tmru_list)
+        if !get(props, 'exit', 0)
+            call s:BuildMenu(0)
+        endif
+        " TLogVAR g:tmru_file
+        if empty(g:tmru_file)
+            " TLogVAR g:TMRU
+            if g:tmru_update_viminfo
+                let g:TMRU = join(map(s:tmru_list, 'v:val[0]'), "\n")
+                wviminfo
+            endif
+        else
+            call tlib#persistent#Save(g:tmru_file, {'version': 1, 'tmru': s:tmru_list})
+            let s:tmru_mtime = getftime(g:tmru_file)
+        endif
+        let s:tmru_must_save = 0
+    endif
 endf
+
 
 function! s:tmruobj_prototype.Find(filename) dict
     let filename = s:NormalizeFilename(a:filename)
@@ -187,13 +270,16 @@ function! s:tmruobj_prototype.Find(filename) dict
     return [-1, []]
 endf
 
+
 function! s:tmruobj_prototype.Set(idx, item) dict
     let self.mru[a:idx] = a:item
 endf
 
+
 function! s:tmruobj_prototype.Get(idx) dict
     return self.mru[a:idx]
 endf
+
 
 function! s:tmruobj_prototype.SetBase(world) dict
     let a:world.base = self.GetFilenames()
@@ -204,56 +290,23 @@ function! s:tmruobj_prototype.SetBase(world) dict
     call tmru#SetFilenameIndicators(a:world, self.mru)
 endf
 
+
 function! s:tmruobj_prototype.FilenameIndex(filenames, filename) "{{{3
     return index(a:filenames, a:filename, 0, g:tmru_ignorecase)
 endf
 
 
 function! TmruObj(...) "{{{3
-    let tmruobj = copy(s:tmruobj_prototype)
-    call call(tmruobj.Update, a:000, tmruobj)
-    return tmruobj
-endf
-
-
-" s:MruRetrieve(?read_data=0)
-function! s:MruRetrieve(...)
-    let read_data = a:0 >= 1 ? a:1 : 0
-    " TLogVAR read_data
-    if empty(g:tmru_file)
-        if read_data && exists("g:TMRU")
-            if g:tmru_update_viminfo
-                " TLogVAR read_data, g:tmru_update_viminfo
-                rviminfo
-            endif
-        endif
-        if !exists("g:TMRU")
-            let g:TMRU = ''
-        endif
-        let s:tmru_list = map(split(g:TMRU, '\n'), '[v:val, {}]')
+    if !exists('s:tmruobj_global')
+        let s:tmruobj_global = copy(s:tmruobj_prototype)
+        let must_load = 1
     else
-        if read_data
-            if exists('s:tmru_mtime') && getftime(g:tmru_file) == s:tmru_mtime
-                let read_data = 0
-            endif
-        elseif !exists('s:tmru_mtime') || getftime(g:tmru_file) != s:tmru_mtime
-            let read_data = 1
-        endif
-        if read_data
-            " TLogVAR read_data, g:tmru_file
-            let data = tlib#persistent#Get(g:tmru_file)
-            let s:tmru_mtime = getftime(g:tmru_file)
-            if get(data, 'version', 0) == 0
-                let s:tmru_list = map(split(get(data, 'tmru', ''), '\n'), '[v:val, {}]')
-            else
-                let s:tmru_list = get(data, 'tmru', [])
-            endif
-        endif
+        let must_load = call(s:tmruobj_global.MustLoad, a:000, s:tmruobj_global)
     endif
-    if read_data
-        let s:last_auto_filename = ''
+    if must_load
+        call s:tmruobj_global.Load()
     endif
-    return s:tmru_list
+    return s:tmruobj_global
 endf
 
 
@@ -289,91 +342,35 @@ function! s:NormalizeFilename(filename) "{{{3
 endf
 
 
-function! s:MruStore(mru, ...)
-    " TLogVAR g:tmru_file
-    let props = a:0 >= 1 ? a:1 : {}
-    let tmru_list = a:mru
-    if get(props, 'exit', 0)
-        let tmru_list = s:MruSort(tmru_list)
-        " echom "DBG tmru_list != s:tmru_list" (tmru_list != s:tmru_list)
-        " echom "DBG tmru_list != s:tmru_list" (string(tmru_list) != string(s:tmru_list))
-        " echom "DBG tmru_list" string(filter(copy(tmru_list), 'has_key(v:val[1], "sessions")'))
-    endif
-    let tmru_list = tmru_list[0 : g:tmruSize]
-    if tmru_list != s:tmru_list
-        let s:tmru_list = deepcopy(tmru_list)
-        if !get(props, 'exit', 0)
-            call s:BuildMenu(0)
-        endif
-        " TLogVAR g:tmru_file
-        if empty(g:tmru_file)
-            " TLogVAR g:TMRU
-            if g:tmru_update_viminfo
-                let g:TMRU = join(map(s:tmru_list, 'v:val[0]'), "\n")
-                wviminfo
-            endif
-        else
-            call tlib#persistent#Save(g:tmru_file, {'version': 1, 'tmru': s:tmru_list})
-            let s:tmru_mtime = getftime(g:tmru_file)
-        endif
-    endif
-endf
-
-
-function! s:MruSort(mru) "{{{3
-    let s:mru_pos = 0
-    call map(a:mru, 's:SetPos(v:val)')
-    unlet s:mru_pos
-    " TLogVAR a:mru
-    let mru = sort(a:mru, 's:MruSorter')
-    " TLogVAR mru
-    return mru
-endf
-
-
-function! s:SetPos(item) "{{{3
-    let a:item[1].pos = s:mru_pos
-    " TLogVAR a:item
-    let s:mru_pos += 1
-    return a:item
-endf
-
-
-function! s:MruSorter(i1, i2) "{{{3
-    let i11 = a:i1[1]
-    let i21 = a:i2[1]
-    let s1 = get(i11, 'sticky', 0)
-    let s2 = get(i21, 'sticky', 0)
-    if s1 == s2
-        let p1 = get(i11, 'pos')
-        let p2 = get(i21, 'pos')
-        return p1 == p2 ? 0 : p1 > p2 ? 1 : -1
-    else
-        return s1 > s2 ? -1 : 1
-    endif
-endf
-
-
 let s:last_auto_filename = ''
 
-function! s:RegisterFile(filename, event, props) "{{{3
+function! s:HandleEvent(filename, event, props) "{{{3
     " TLogVAR a:filename, a:event, a:props, &buftype
-    if !empty(a:filename) && get(a:props, 'register', 1) && s:last_auto_filename != a:filename
-        " TLogVAR "Consider", a:filename
-        if getbufvar(a:filename, '&buflisted') &&
-                    \ getbufvar(a:filename, '&buftype') !~ 'nofile' &&
-                    \ (g:tmru_check_disk ?
-                    \     (filereadable(a:filename) && !isdirectory(a:filename)) :
-                    \     fnamemodify(a:filename, ":t") != '')
-            let s:last_auto_filename = a:filename
-            call s:MruRegister(a:filename, a:props)
+    let tmruobj = TmruObj(get(a:props, 'load', 0))
+    if !empty(a:filename)
+        " TLogVAR a:filename, a:event, a:props, &buftype
+        " echom "DBG register" get(a:props, 'register', 1) (s:last_auto_filename != a:filename)
+        if get(a:props, 'register', 1) && s:last_auto_filename != a:filename
+            " TLogVAR "Consider", a:filename
+            if getbufvar(a:filename, '&buflisted') &&
+                        \ getbufvar(a:filename, '&buftype') !~ 'nofile' &&
+                        \ (g:tmru_check_disk ?
+                        \     (filereadable(a:filename) && !isdirectory(a:filename)) :
+                        \     fnamemodify(a:filename, ":t") != '')
+                let s:last_auto_filename = a:filename
+                call s:MruRegister(tmruobj, a:filename, a:props)
+            endif
         endif
+        " echom "DBG must_save" s:tmru_must_save
+    endif
+    if get(a:props, 'save', 1) && s:tmru_must_save
+        call tmruobj.Save(a:props)
     endif
 endf
 
 
-function! s:MruRegister(filename, props)
-    " TLogVAR a:filename
+function! s:MruRegister(tmruobj, filename, props)
+    " TLogVAR a:filename, a:props
     let filename = s:NormalizeFilename(a:filename)
     if g:tmruExclude != '' && filename =~ g:tmruExclude
         if &verbose | echom "tmru: ignore file" filename | end
@@ -382,12 +379,12 @@ function! s:MruRegister(filename, props)
     if exists('b:tmruExclude') && b:tmruExclude
         return
     endif
-    let tmruobj = TmruObj(get(a:props, 'load', 0))
-    let [oldpos, item] = TmruGetItem(tmruobj, filename)
-    let [must_update, mru] = TmruInsert(tmruobj, oldpos, item)
-    if must_update
-        let tmruobj.mru = mru
-        call tmruobj.Save(a:props)
+    let [oldpos, item] = TmruGetItem(a:tmruobj, filename)
+    let [must_save, mru] = TmruInsert(a:tmruobj, oldpos, item)
+    " TLogVAR must_save
+    if must_save
+        let a:tmruobj.mru = mru
+        let s:tmru_must_save = 1
     endif
 endf
 
@@ -448,13 +445,13 @@ augroup tmru
         call s:BuildMenu(1)
     endif
     for [s:event, s:props] in items(g:tmru_events)
-        exec 'autocmd '. s:event .' * call s:RegisterFile(expand("<afile>:p"), '. string(s:event) .', '. string(s:props) .')'
+        exec 'autocmd '. s:event .' * call s:HandleEvent(expand("<afile>:p"), '. string(s:event) .', '. string(s:props) .')'
     endfor
     unlet! s:event s:props
 augroup END
 
 for s:i in range(1, bufnr('$'))
-    call s:RegisterFile(bufname(s:i), 'vimstarting', {'register': 1})
+    call s:HandleEvent(bufname(s:i), 'vimstarting', {'register': 1})
 endfor
 unlet! s:i
 
