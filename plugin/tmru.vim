@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2014-02-05.
-" @Revision:    1006
+" @Revision:    1017
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -116,6 +116,22 @@ if !exists("g:tmru_events")
 endif
 
 
+if !exists('g:tmru_resolve_method')
+    " When running multiple instances of vim, there is a possibility of 
+    " synchronization conflicts when two instances want to update the 
+    " mru list.
+    "
+    " Possible values:
+    "
+    "   write .... The current instance of vim overwrites the mru list.
+    "   read ..... The current instance of vim reads the mru list from 
+    "              disk.
+    "
+    " If empty, query the user what to do.
+    let g:tmru_resolve_method = 'write'   "{{{2
+endif
+
+
 if !exists("g:tmru_file")
     " Where to save the file list. The default value is only 
     " effective, if 'viminfo' doesn't contain '!' -- in which case 
@@ -184,6 +200,20 @@ function! s:tmruobj_prototype.MustLoad(...) dict
             endif
         elseif !exists('s:tmru_mtime') || getftime(g:tmru_file) != s:tmru_mtime
             let must_load = 1
+        endif
+    endif
+    if must_load && s:tmru_must_save
+        let resolve = g:tmru_resolve_method
+        if empty(resolve)
+            echom "TMRU: Another instance of VIM updated the mru list"
+            let resolvei = inputlist('Resolve synchronization conflict:', '1. Write', '2. read')
+            let resolve = resolvei == 2 ? 'r' : 'w'
+        endif
+        if g:tmru_resolve_method =~ '^w\%[rite]$'
+            let must_load = 0
+            call self.Save()
+        elseif g:tmru_resolve_method =~ '^r\%[ead]$'
+            let s:tmru_must_save = 0
         endif
     endif
     return must_load
