@@ -67,8 +67,10 @@ Contents~
         g:tmru_sessions .................... |g:tmru_sessions|
         g:tmru#display_relative_filename ... |g:tmru#display_relative_filename|
         g:tmru_single_instance_mode ........ |g:tmru_single_instance_mode|
+        g:tmru_eager_save .................. |g:tmru_eager_save|
         g:tmru_update_viminfo .............. |g:tmru_update_viminfo|
         g:tmru_events ...................... |g:tmru_events|
+        g:tmru_resolve_method .............. |g:tmru_resolve_method|
         g:tmru_file ........................ |g:tmru_file|
         g:tmruSize ......................... |g:tmruSize|
         g:tmruExclude ...................... |g:tmruExclude|
@@ -142,6 +144,14 @@ g:tmru_single_instance_mode    (default: 0)
     from/to disk. The list won't be synchronized across multiple 
     instances of vim running in parallel.
 
+                                                    *g:tmru_eager_save*
+g:tmru_eager_save              (default: !g:tmru_single_instance_mode && !has('gui_running'))
+    If true, save the mru list more often.
+
+    If you run multiple instances of vim, synchronization of mru lists 
+    relies on |FocusGained| and |FocusLost| events but this probably 
+    does not work in all circumstances.
+
                                                     *g:tmru_update_viminfo*
 g:tmru_update_viminfo          (default: !g:tmru_single_instance_mode)
     If true, load and save the viminfo file on certain events -- see 
@@ -156,14 +166,31 @@ g:tmru_events                  (default: {...})
 
     load ....... Load the external representation from disk
     register ... Register the current buffer
-    save ....... Save mru list to disk (currently ignored)
+    save ....... If true, save mru list to disk
 
+
+                                                    *g:tmru_resolve_method*
+g:tmru_resolve_method          (default: 'write')
+    When running multiple instances of vim, there is a possibility of 
+    synchronization conflicts when two instances want to update the 
+    mru list.
+
+    Possible values:
+
+      write .... The current instance of vim overwrites the mru list.
+      read ..... The current instance of vim reads the mru list from 
+                 disk.
+
+    If empty, query the user what to do.
 
                                                     *g:tmru_file*
 g:tmru_file                    (default: tlib#persistent#Filename('tmru', 'files', 1))
     Where to save the file list. The default value is only 
     effective, if 'viminfo' doesn't contain '!' -- in which case 
     the 'viminfo' will be used.
+
+    CAUTION: The use of viminfo may result in various problems 
+    when you run several instances of vim at once.
 
                                                     *g:tmruSize*
 g:tmruSize                     (default: empty(g:tmru_file) ? 50 : 500)
