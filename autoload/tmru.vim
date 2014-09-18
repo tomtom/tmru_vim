@@ -190,10 +190,10 @@ endf
 
 
 function! s:RemoveItems(filenames, ...) "{{{3
+    " TLogVAR a:filenames
     let modified_list = 0
     if !empty(a:filenames)
         let tmruobj = a:0 >= 1 ? a:1 : TmruObj()
-        call tmruobj.Update()
         let filenames = tmruobj.GetFilenames()
         for bf in a:filenames
             let bi = tmruobj.FilenameIndex(filenames, bf)
