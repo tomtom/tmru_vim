@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2014-02-05.
-" @Revision:    1017
+" @Last Change: 2014-09-18.
+" @Revision:    1034
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -192,7 +192,7 @@ let s:tmruobj_prototype = {}
 
 function! s:tmruobj_prototype.MustLoad(...) dict
     let must_load = a:0 >= 1 ? a:1 : 0
-    " TLogVAR must_load
+    " TLogVAR 1, must_load
     if !empty(g:tmru_file)
         if must_load
             if exists('s:tmru_mtime') && getftime(g:tmru_file) == s:tmru_mtime
@@ -214,8 +214,10 @@ function! s:tmruobj_prototype.MustLoad(...) dict
             call self.Save()
         elseif g:tmru_resolve_method =~ '^r\%[ead]$'
             let s:tmru_must_save = 0
+            " echom "DBG MustLoad tmru_must_save" s:tmru_must_save
         endif
     endif
+    " TLogVAR 2, must_load
     return must_load
 endf
 
@@ -249,6 +251,7 @@ function! s:tmruobj_prototype.Load() dict
         endif
     endif
     let s:last_auto_filename = ''
+    " echom "DBG Load tmru_must_save" s:tmru_must_save
     let s:tmru_must_save = 0
     let self.mru = s:tmru_list
 endf
@@ -263,7 +266,7 @@ function! s:tmruobj_prototype.Save(...) dict
     let props = a:0 >= 1 ? a:1 : {}
     " TLogVAR props
     let tmru_list = self.mru
-    " echom "DBG must_save" s:tmru_must_save
+    " echom "DBG Save must_save" s:tmru_must_save
     if s:tmru_must_save
         if len(tmru_list) > g:tmruSize
             let tmru_list = tmru_list[0 : g:tmruSize - 1]
@@ -282,6 +285,7 @@ function! s:tmruobj_prototype.Save(...) dict
         else
             call tlib#persistent#Save(g:tmru_file, {'version': 1, 'tmru': s:tmru_list})
             let s:tmru_mtime = getftime(g:tmru_file)
+            " echom "DBG Save tmru_mtime" s:tmru_mtime
         endif
         let s:tmru_must_save = 0
     endif
@@ -391,8 +395,9 @@ function! s:HandleEvent(filename, event, props) "{{{3
                 call s:MruRegister(tmruobj, a:filename, a:props)
             endif
         endif
-        " echom "DBG must_save" s:tmru_must_save
+        " echom "DBG HandleEvent must_save" s:tmru_must_save
     endif
+    " echom "DBG HandleEvent" get(a:props, 'save', 1) s:tmru_must_save
     if get(a:props, 'save', 1) && s:tmru_must_save
         call tmruobj.Save(a:props)
     endif
@@ -415,6 +420,7 @@ function! s:MruRegister(tmruobj, filename, props)
     if must_save
         let a:tmruobj.mru = mru
         let s:tmru_must_save = 1
+        " echom "DBG MruRegister tmru_must_save" s:tmru_must_save
     endif
 endf
 

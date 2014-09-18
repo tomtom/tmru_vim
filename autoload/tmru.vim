@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2014-07-07.
-" @Revision:    320
+" @Revision:    322
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -133,6 +133,7 @@ endf
 
 function! tmru#EditFiles(filenames, ...) "{{{3
     if !empty(a:filenames)
+        " TLogVAR a:filenames
         let tmruobj = a:0 >= 1 ? a:1 : TmruObj()
         let remove_files = []
         for bf in a:filenames
@@ -217,7 +218,6 @@ endf
 
 
 function! tmru#Session(session_no, mru) "{{{3
-    " TLogVAR a:session_no
     if empty(a:session_no)
         let session = 1
         let opt = 'sessions'
@@ -382,6 +382,7 @@ function! tmru#Drop(world, selected) "{{{3
     if bufnr(filename) != -1
         exec 'drop' fnameescape(filename)
     else
+        " TLogVAR filename
         call tmru#EditFiles([filename])
     endif
     let a:world.state = 'exit'
