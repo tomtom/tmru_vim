@@ -20,6 +20,19 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+if has('clientserver') && exists('v:servername')
+    if !exists('g:tmruIgnoreServernamesRx')
+        " Don't load the tmru plugin for VIM servers (requires 
+        " |clientserver|) matching this |regexp|.
+        let g:tmruIgnoreServernamesRx = '^_LIKELYCOMPLETE_$'   "{{{2
+    endif
+    if v:servername =~ g:tmruIgnoreServernamesRx
+        let loaded_tmru = -1
+        finish
+    endif
+endif
+
+
 if !exists("g:tmruMenu")
     " The menu's prefix. If the value is "", the menu will be disabled.
     let g:tmruMenu = 'File.M&RU.' "{{{2
