@@ -616,7 +616,7 @@ function! s:EditNamedSessions(item, filenames) "{{{3
         let sessionnames = join(sessionnames0, ', ')
         let prompt = printf("%s session names: ", filename)
         let sessionnames = input(prompt, sessionnames)
-        if empty(sessionnames)
+        if empty(sessionnames) && has_key(props, 'sessionnames')
             call remove(props, 'sessionnames')
         else
             let props.sessionnames = split(sessionnames, '\s*,\s*')
