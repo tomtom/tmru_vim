@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2014-07-07.
-" @Revision:    322
+" @Revision:    323
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -138,7 +138,7 @@ function! tmru#EditFiles(filenames, ...) "{{{3
         let remove_files = []
         for bf in a:filenames
             " TLogVAR bf
-            if !s:Edit(bf)
+            if !tmru#Edit(bf)
                 call add(remove_files, bf)
             endif
         endfor
@@ -152,7 +152,7 @@ endf
 
 " Return 0 if the file isn't readable/doesn't exist.
 " Otherwise return 1.
-function! s:Edit(filename) "{{{3
+function! tmru#Edit(filename) "{{{3
     let filename = fnamemodify(a:filename, ':p')
     if filename == expand('%:p')
         return 1

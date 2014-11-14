@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2014-09-18.
-" @Revision:    1034
+" @Revision:    1040
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -285,9 +285,6 @@ function! s:tmruobj_prototype.Save(...) dict
             let tmru_list = tmru_list[0 : g:tmruSize - 1]
         endif
         let s:tmru_list = deepcopy(tmru_list)
-        if !get(props, 'exit', 0)
-            call s:BuildMenu(0)
-        endif
         " TLogVAR g:tmru_file
         if empty(g:tmru_file)
             " TLogVAR g:TMRU
@@ -370,7 +367,7 @@ function! s:BuildMenu(initial) "{{{3
         for item in mru
             let e = item[0]
             let me = escape(e, '.\ ')
-            exec 'amenu '. g:tmruMenu . me .' :call <SID>Edit('. string(e) .')<cr>'
+            exec 'amenu '. g:tmruMenu . me .' :call tmru#Edit('. string(e) .')<cr>'
         endfor
     endif
 endf
@@ -411,8 +408,13 @@ function! s:HandleEvent(filename, event, props) "{{{3
         " echom "DBG HandleEvent must_save" s:tmru_must_save
     endif
     " echom "DBG HandleEvent" get(a:props, 'save', 1) s:tmru_must_save
-    if get(a:props, 'save', 1) && s:tmru_must_save
-        call tmruobj.Save(a:props)
+    if s:tmru_must_save
+        if !get(a:props, 'exit', 0)
+            call s:BuildMenu(0)
+        endif
+        if get(a:props, 'save', 1)
+            call tmruobj.Save(a:props)
+        endif
     endif
 endf
 
@@ -490,6 +492,7 @@ augroup tmru
     autocmd!
     if has('vim_starting')
         autocmd VimEnter * call s:BuildMenu(1)
+        autocmd SessionLoadPost * call s:HandleEvent('', 'SessionLoadPost', {'load': 1})
     else
         call s:BuildMenu(1)
     endif
