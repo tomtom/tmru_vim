@@ -179,7 +179,8 @@ if !exists("g:tmruExclude") "{{{2
                 \ . '\|__.\{-}__$'
                 \ . '\|^fugitive:'
                 \ . '\|/truecrypt\d\+/'
-                \ . '\|' . substitute(escape(&suffixes, '~.*$^'), '\\\@<!,', '$\\|', 'g') .'$' " &suffixes, ORed (split on (not escaped) comma)
+                \ . '\|\(\~\|\.o\|\.swp\|\.obj\)$'  " based on Vim's default for 'suffixes'.
+                \ . '\|' . substitute(escape(&wildignore, '~.*$^'), '\\\@<!,', '$\\|', 'g') .'$' " &wildignore, ORed (split on (not escaped) comma).
     unlet s:PS
 endif
 

@@ -198,8 +198,9 @@ g:tmruSize                     (default: empty(g:tmru_file) ? 50 : 500)
     The size is smaller if viminfo is used (see |g:tmru_file|).
 
                                                     *g:tmruExclude*
-g:tmruExclude                  (default: '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$')
+g:tmruExclude                  (default: see plugin/tmru.vim)
     Ignore files matching this regexp.
+    This includes 'wildignore'.
 
                                                     *g:tmru_ignorecase*
 g:tmru_ignorecase              (default: !has('fname_case'))
