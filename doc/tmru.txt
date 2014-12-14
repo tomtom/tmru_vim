@@ -62,6 +62,7 @@ Suggested maps (to be set in ~/.vimrc): >
 ========================================================================
 Contents~
 
+        g:tmruIgnoreServernamesRx .......... |g:tmruIgnoreServernamesRx|
         g:tmruMenu ......................... |g:tmruMenu|
         g:tmruMenuSize ..................... |g:tmruMenuSize|
         g:tmru_sessions .................... |g:tmru_sessions|
@@ -88,9 +89,12 @@ Contents~
         g:tmru_select_filter ............... |g:tmru_select_filter|
         g:tmru#drop ........................ |g:tmru#drop|
         g:tmru#auto_remove_unreadable ...... |g:tmru#auto_remove_unreadable|
+        g:tmru#use_tabs .................... |g:tmru#use_tabs|
+        g:tmru#edit_cmds ................... |g:tmru#edit_cmds|
         tmru#SelectMRU ..................... |tmru#SelectMRU()|
         tmru#EditMRU ....................... |tmru#EditMRU()|
         tmru#EditFiles ..................... |tmru#EditFiles()|
+        tmru#Edit .......................... |tmru#Edit()|
         tmru#Session ....................... |tmru#Session()|
         tmru#Leave ......................... |tmru#Leave()|
         tmru#DisplayUnreadableFiles ........ |tmru#DisplayUnreadableFiles()|
@@ -111,6 +115,11 @@ Contents~
 
 ========================================================================
 plugin/tmru.vim~
+
+                                                    *g:tmruIgnoreServernamesRx*
+g:tmruIgnoreServernamesRx      (default: '^_LIKELYCOMPLETE_$')
+    Don't load the tmru plugin for VIM servers (requires 
+    |clientserver|) matching this |regexp|.
 
                                                     *g:tmruMenu*
 g:tmruMenu                     (default: 'File.M&RU.')
@@ -198,7 +207,7 @@ g:tmruSize                     (default: empty(g:tmru_file) ? 50 : 500)
     The size is smaller if viminfo is used (see |g:tmru_file|).
 
                                                     *g:tmruExclude*
-g:tmruExclude                  (default: see plugin/tmru.vim)
+g:tmruExclude                  (default: '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$')
     Ignore files matching this regexp.
     This includes 'wildignore'.
 
@@ -264,6 +273,12 @@ g:tmru#auto_remove_unreadable  (default: 1)
     If true, automatically remove unreadable files from the mru list, 
     when trying to edit them.
 
+                                                    *g:tmru#use_tabs*
+g:tmru#use_tabs                (default: 0)
+
+                                                    *g:tmru#edit_cmds*
+g:tmru#edit_cmds               (default: g:tmru#use_tabs ? {'buffer': 'tab split | buffer', 'edit': 'tabedit'} : {})
+
                                                     *tmru#SelectMRU()*
 tmru#SelectMRU()
 
@@ -272,6 +287,11 @@ tmru#EditMRU()
 
                                                     *tmru#EditFiles()*
 tmru#EditFiles(filenames, ...)
+
+                                                    *tmru#Edit()*
+tmru#Edit(filename)
+    Return 0 if the file isn't readable/doesn't exist.
+    Otherwise return 1.
 
                                                     *tmru#Session()*
 tmru#Session(session_no, mru)

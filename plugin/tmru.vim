@@ -4,7 +4,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
 " @Last Change: 2014-09-18.
-" @Revision:    1040
+" @Revision:    1041
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -170,6 +170,7 @@ if !exists("g:tmruExclude") "{{{2
         let s:PS = "/"
     endif
     " Ignore files matching this regexp.
+    " This includes 'wildignore'.
     " :read: let g:tmruExclude = '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__.\{-}__$' "{{{2
     let g:tmruExclude = s:PS . '[Tt]e\?mp' . s:PS
                 \ . '\|' . s:PS . '\(vimfiles\|\.vim\)' . s:PS . '\(doc\|cache\)' . s:PS
