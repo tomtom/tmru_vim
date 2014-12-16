@@ -3,8 +3,8 @@
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2007-04-13.
-" @Last Change: 2014-09-18.
-" @Revision:    1041
+" @Last Change: 2014-12-16.
+" @Revision:    1043
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -518,6 +518,12 @@ command! TMRU TRecentlyUsedFiles
 
 " Edit the MRU list.
 command! TRecentlyUsedFilesEdit call tmru#EditMRU()
+
+" (Re-)Load the MRU list.
+command! Tmruload call s:HandleEvent('', 'Tmruload', {'load': 1})
+
+" Save the MRU list to disk.
+command! Tmrusave let s:tmru_must_save = 1 | call s:HandleEvent('', 'Tmrusave', {'save': 1})
 
 if g:tmru_sessions > 0
     " Open files from a previous session (see |g:tmru_sessions|).
