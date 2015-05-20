@@ -2,7 +2,7 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2014-12-10.
+" @Last Change: 2015-05-20.
 " @Revision:    330
 
 
@@ -68,26 +68,10 @@ if !exists('g:tmru_select_filter')
 endif
 
 
-if !exists('g:tmru#drop')
-    " If true, use |:drop| to edit loaded buffers (only available with GUI).
-    let g:tmru#drop = has('gui')   "{{{2
-endif
-
-
 if !exists('g:tmru#auto_remove_unreadable')
     " If true, automatically remove unreadable files from the mru list, 
     " when trying to edit them.
     let g:tmru#auto_remove_unreadable = 1   "{{{2
-endif
-
-
-if !exists('g:tmru#use_tabs')
-    let g:tmru#use_tabs = 0   "{{{2
-endif
-
-
-if !exists('g:tmru#edit_cmds')
-    let g:tmru#edit_cmds = g:tmru#use_tabs ? {'buffer': 'tab split | buffer', 'edit': 'tabedit'} : {}  "{{{2
 endif
 
 
@@ -148,7 +132,7 @@ function! tmru#EditFiles(filenames, ...) "{{{3
         let remove_files = []
         for bf in a:filenames
             " TLogVAR bf
-            if !tmru#Edit(bf)
+            if !tlib#file#Edit(bf)
                 call add(remove_files, bf)
             endif
         endfor
@@ -157,46 +141,6 @@ function! tmru#EditFiles(filenames, ...) "{{{3
         endif
     endif
     return 1
-endf
-
-
-" Return 0 if the file isn't readable/doesn't exist.
-" Otherwise return 1.
-function! tmru#Edit(filename) "{{{3
-    let filename = fnamemodify(a:filename, ':p')
-    if filename == expand('%:p')
-        return 1
-    else
-        let bn = bufnr(filename)
-        " TLogVAR bn
-        if bn != -1 && buflisted(bn)
-            if g:tmru#drop
-                exec get(g:tmru#edit_cmds, 'drop', 'drop') fnameescape(filename)
-            else
-                exec get(g:tmru#edit_cmds, 'buffer', 'buffer') bn
-            endif
-            return 1
-        elseif filereadable(filename)
-            try
-                let file = tlib#arg#Ex(filename)
-                " TLogVAR file
-                exec get(g:tmru#edit_cmds, 'edit', 'edit') file
-            catch /E325/
-                " swap file exists, let the user handle it
-            catch
-                echohl error
-                echom v:exception
-                echohl NONE
-            endtry
-            return 1
-        else
-            echom "TMRU: File not readable: " . filename
-            if filename != a:filename
-                echom "TMRU: original filename: " . a:filename
-            endif
-        endif
-    endif
-    return 0
 endf
 
 

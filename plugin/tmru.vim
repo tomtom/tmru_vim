@@ -2,19 +2,18 @@
 " @Author:      Tom Link (micathom AT gmail com?subject=vim-tlib-mru)
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Created:     2007-04-13.
-" @Last Change: 2014-12-16.
+" @Last Change: 2015-05-20.
 " @Revision:    1043
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
     finish
 endif
-if !exists('loaded_tlib') || loaded_tlib < 106
-    echoerr "tlib >= 1.06 is required"
+if !exists('loaded_tlib') || loaded_tlib < 114
+    echoerr "tlib >= 1.14 is required"
     finish
 endif
-let loaded_tmru = 103
+let loaded_tmru = 104
 
 let s:save_cpo = &cpo
 set cpo&vim
@@ -369,7 +368,7 @@ function! s:BuildMenu(initial) "{{{3
         for item in mru
             let e = item[0]
             let me = escape(e, '.\ ')
-            exec 'amenu '. g:tmruMenu . me .' :call tmru#Edit('. string(e) .')<cr>'
+            exec 'amenu '. g:tmruMenu . me .' :call tlib#file#Edit('. string(e) .')<cr>'
         endfor
     endif
 endf
