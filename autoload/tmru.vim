@@ -2,7 +2,7 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2015-05-20.
+" @Last Change: 2015-07-29.
 " @Revision:    330
 
 
@@ -348,12 +348,13 @@ function! tmru#UnsetPersistent(world, selected) "{{{3
     let tmruobj = TmruObj()
     let mru = tmruobj.mru
     let filenames = tmruobj.GetFilenames()
+    let must_update = 0
     for filename in a:selected
         let [oldpos, item] = TmruGetItem(tmruobj, filename)
         let item[1]['sticky'] = 0
         let [must_update, tmruobj.mru] = TmruInsert(tmruobj, oldpos, item)
     endfor
-    call tmruobj.Save()
+    call tmruobj.Save({'must_update': must_update})
     call tmruobj.SetBase(a:world)
     let a:world.state = 'reset'
     return a:world
@@ -364,6 +365,7 @@ function! tmru#TogglePersistent(world, selected) "{{{3
     let tmruobj = TmruObj()
     let filenames = tmruobj.GetFilenames()
     let msgs = []
+    let must_update = 0
     for filename in a:selected
         let [oldpos, item] = TmruGetItem(tmruobj, filename)
         let item[1]['sticky'] = !get(item[1], 'sticky', 0)
@@ -378,7 +380,7 @@ function! tmru#TogglePersistent(world, selected) "{{{3
         call input("Press ENTER to continue")
         echohl NONE
     endif
-    call tmruobj.Save()
+    call tmruobj.Save({'must_update': must_update})
     call tmruobj.SetBase(a:world)
     let a:world.state = 'reset'
     return a:world

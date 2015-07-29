@@ -2,7 +2,7 @@
 " @Author:      Tom Link (micathom AT gmail com?subject=vim-tlib-mru)
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-05-20.
+" @Last Change: 2015-07-29.
 " @Revision:    1043
 " GetLatestVimScripts: 1864 1 tmru.vim
 
@@ -281,7 +281,7 @@ function! s:tmruobj_prototype.Save(...) dict
     " TLogVAR props
     let tmru_list = self.mru
     " echom "DBG Save must_save" s:tmru_must_save
-    if s:tmru_must_save
+    if s:tmru_must_save || get(props, 'must_update', 0)
         if len(tmru_list) > g:tmruSize
             let tmru_list = tmru_list[0 : g:tmruSize - 1]
         endif
