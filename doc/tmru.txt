@@ -80,21 +80,19 @@ Contents~
         TmruObj ............................ |TmruObj()|
         TmruGetItem ........................ |TmruGetItem()|
         TmruInsert ......................... |TmruInsert()|
-        :TRecentlyUsedFiles ................ |:TRecentlyUsedFiles|
-        :TMRU .............................. |:TMRU|
-        :TRecentlyUsedFilesEdit ............ |:TRecentlyUsedFilesEdit|
-        :TRecentlyUsedFilesSessions ........ |:TRecentlyUsedFilesSessions|
+        :Tmru .............................. |:Tmru|
+        :Tmruedit .......................... |:Tmruedit|
+        :Tmruload .......................... |:Tmruload|
+        :Tmrusave .......................... |:Tmrusave|
+        :Tmrusession ....................... |:Tmrusession|
         g:tmru#set_filename_indicators ..... |g:tmru#set_filename_indicators|
         g:tmru#sessions_len ................ |g:tmru#sessions_len|
         g:tmru_select_filter ............... |g:tmru_select_filter|
-        g:tmru#drop ........................ |g:tmru#drop|
         g:tmru#auto_remove_unreadable ...... |g:tmru#auto_remove_unreadable|
-        g:tmru#use_tabs .................... |g:tmru#use_tabs|
-        g:tmru#edit_cmds ................... |g:tmru#edit_cmds|
+        g:tmru#close_others ................ |g:tmru#close_others|
         tmru#SelectMRU ..................... |tmru#SelectMRU()|
         tmru#EditMRU ....................... |tmru#EditMRU()|
         tmru#EditFiles ..................... |tmru#EditFiles()|
-        tmru#Edit .......................... |tmru#Edit()|
         tmru#Session ....................... |tmru#Session()|
         tmru#Leave ......................... |tmru#Leave()|
         tmru#DisplayUnreadableFiles ........ |tmru#DisplayUnreadableFiles()|
@@ -231,22 +229,29 @@ TmruGetItem(tmruobj, filename)
                                                     *TmruInsert()*
 TmruInsert(tmruobj, oldpos, item)
 
-                                                    *:TRecentlyUsedFiles*
-:TRecentlyUsedFiles
+                                                    *:Tmru*
+:Tmru
     Display the MRU list.
 
-                                                    *:TMRU*
-:TMRU
-    Alias for |:TRecentlyUsedFiles|.
-
-                                                    *:TRecentlyUsedFilesEdit*
-:TRecentlyUsedFilesEdit
+                                                    *:Tmruedit*
+:Tmruedit
     Edit the MRU list.
 
-                                                    *:TRecentlyUsedFilesSessions*
-:TRecentlyUsedFilesSessions
+                                                    *:Tmruload*
+:Tmruload
+    (Re-)Load the MRU list.
+
+                                                    *:Tmrusave*
+:Tmrusave
+    Save the MRU list to disk.
+
+                                                    *:Tmrusession*
+:Tmrusession
     Open files from a previous session (see |g:tmru_sessions|).
     This command is only available if g:tmru_sessions > 0.
+
+    With the optional bang [!], close (|:bdelete|) all previously 
+    opened buffers / windows / tabs.
 
 
 ========================================================================
@@ -264,20 +269,13 @@ g:tmru_select_filter           (default: '')
     If non-empty, an expression to |filter()| the list of files.
     Can also be buffer-local.
 
-                                                    *g:tmru#drop*
-g:tmru#drop                    (default: has('gui'))
-    If true, use |:drop| to edit loaded buffers (only available with GUI).
-
                                                     *g:tmru#auto_remove_unreadable*
 g:tmru#auto_remove_unreadable  (default: 1)
     If true, automatically remove unreadable files from the mru list, 
     when trying to edit them.
 
-                                                    *g:tmru#use_tabs*
-g:tmru#use_tabs                (default: 0)
-
-                                                    *g:tmru#edit_cmds*
-g:tmru#edit_cmds               (default: g:tmru#use_tabs ? {'buffer': 'tab split | buffer', 'edit': 'tabedit'} : {})
+                                                    *g:tmru#close_others*
+g:tmru#close_others            (default: 'bdelete')
 
                                                     *tmru#SelectMRU()*
 tmru#SelectMRU()
@@ -288,13 +286,8 @@ tmru#EditMRU()
                                                     *tmru#EditFiles()*
 tmru#EditFiles(filenames, ...)
 
-                                                    *tmru#Edit()*
-tmru#Edit(filename)
-    Return 0 if the file isn't readable/doesn't exist.
-    Otherwise return 1.
-
                                                     *tmru#Session()*
-tmru#Session(session_no, mru)
+tmru#Session(session_no, mru, ...)
 
                                                     *tmru#Leave()*
 tmru#Leave()
