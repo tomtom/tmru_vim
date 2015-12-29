@@ -2,8 +2,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2015-10-22.
-" @Revision:    332
+" @Last Change: 2015-12-29.
+" @Revision:    338
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -171,7 +171,8 @@ function! s:IsNamedSession(session) "{{{3
 endf
 
 
-function! tmru#Session(session_no, mru) "{{{3
+function! tmru#Session(session_no, mru, ...) "{{{3
+    TVarArg ['close_others', 0]
     if empty(a:session_no)
         let session = 1
         let opt = 'sessions'
@@ -184,6 +185,9 @@ function! tmru#Session(session_no, mru) "{{{3
     endif
     " TLogVAR a:session_no, session, opt
     if !empty(session)
+        if close_others
+            bufdo bdelete
+        endif
         let filenames = []
         for [filename, props] in a:mru
             " TLogVAR filename, props
