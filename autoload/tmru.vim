@@ -3,7 +3,7 @@
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
 " @Last Change: 2015-12-29.
-" @Revision:    338
+" @Revision:    339
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -74,6 +74,10 @@ if !exists('g:tmru#auto_remove_unreadable')
     let g:tmru#auto_remove_unreadable = 1   "{{{2
 endif
 
+
+if !exists('g:tmru#close_others')
+    let g:tmru#close_others = 'bdelete'   "{{{2
+endif
 
 function! tmru#SelectMRU()
     " TLogDBG "SelectMRU#1"
@@ -186,7 +190,7 @@ function! tmru#Session(session_no, mru, ...) "{{{3
     " TLogVAR a:session_no, session, opt
     if !empty(session)
         if close_others
-            bufdo bdelete
+            exec 'bufdo' g:tmru#close_others
         endif
         let filenames = []
         for [filename, props] in a:mru
@@ -417,7 +421,7 @@ function! tmru#PreviousSession(world, selected) "{{{3
                         call a:world.CloseScratch()
                     endif
                     call add(sessions_done, session)
-                    exec 'TRecentlyUsedFilesSessions' session
+                    exec 'Tmrusession' session
                 endif
             endif
         endif

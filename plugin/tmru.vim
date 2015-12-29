@@ -2,8 +2,8 @@
 " @Author:      Tom Link (micathom AT gmail com?subject=vim-tlib-mru)
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-07-29.
-" @Revision:    1043
+" @Last Change: 2015-12-29.
+" @Revision:    1056
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -510,13 +510,10 @@ unlet! s:i
 
 
 " Display the MRU list.
-command! TRecentlyUsedFiles call tmru#SelectMRU()
-
-" Alias for |:TRecentlyUsedFiles|.
-command! TMRU TRecentlyUsedFiles
+command! Tmru call tmru#SelectMRU()
 
 " Edit the MRU list.
-command! TRecentlyUsedFilesEdit call tmru#EditMRU()
+command! Tmruedit call tmru#EditMRU()
 
 " (Re-)Load the MRU list.
 command! Tmruload call s:HandleEvent('', 'Tmruload', {'load': 1})
@@ -527,7 +524,10 @@ command! Tmrusave let s:tmru_must_save = 1 | call s:HandleEvent('', 'Tmrusave', 
 if g:tmru_sessions > 0
     " Open files from a previous session (see |g:tmru_sessions|).
     " This command is only available if g:tmru_sessions > 0.
-    command! -nargs=? TRecentlyUsedFilesSessions call tmru#Session(<q-args>, TmruObj().mru)
+    "
+    " With the optional bang [!], close (|:bdelete|) all previously 
+    " opened buffers / windows / tabs.
+    command! -nargs=? -bar -bang -complete=customlist,tmru#SessionNames Tmrusession call tmru#Session(<q-args>, TmruObj().mru, !empty("<bang>"))
 
     autocmd tmru VimLeave * call tmru#Leave()
 endif
