@@ -2,8 +2,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2015-12-29.
-" @Revision:    339
+" @Last Change: 2016-03-06.
+" @Revision:    340
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -29,7 +29,7 @@ if !exists('g:tmru#world') "{{{2
                 \ {'key': 6,  'agent': 'tmru#CheckFilenames',     'key_name': '<c-f>', 'submenu': 'Edit', 'help': 'Check file name(s)'},
                 \ {'key': "\<del>", 'agent': 'tmru#RemoveItem',   'key_name': '<del>', 'submenu': 'Edit', 'help': 'Remove file name(s)'},
                 \ {'key': "\<c-cr>", 'agent': 'tmru#Drop',        'key_name': '<c-cr>', 'help': 'Drop to file name'},
-                \ {'key': 10, 'agent': 'tlib#agent#ShowInfo',         'key_name': '<c-i>', 'help': 'Show info'},
+                \ {'key': "\<f6>", 'agent': 'tlib#agent#ShowInfo',         'key_name': '<F6>', 'help': 'Show info'},
                 \ {'key': 19, 'agent': 'tlib#agent#EditFileInSplit',  'key_name': '<c-s>', 'help': 'Edit files (split)'},
                 \ {'key': 22, 'agent': 'tlib#agent#EditFileInVSplit', 'key_name': '<c-v>', 'help': 'Edit files (vertical split)'},
                 \ {'key': 20, 'agent': 'tlib#agent#EditFileInTab',    'key_name': '<c-t>', 'help': 'Edit files (new tab)'},
