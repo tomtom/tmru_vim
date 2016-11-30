@@ -303,15 +303,13 @@ function! s:tmruobj_prototype.Save(...) dict
 endf
 
 
-function! s:tmruobj_prototype.Find(filename) dict
+function! s:tmruobj_prototype.Find(filename, ...) dict
     let filename = s:NormalizeFilename(a:filename)
-    let idx = 0
-    for item in self.mru
-        if item[0] == filename
-            return [idx, item]
-        endif
-        let idx += 1
-    endfor
+    let filenames = a:0 ? a:1 : self.GetFilenames()
+    let idx = index(filenames, filename)
+    if idx !=# -1
+      return [idx, self.mru[idx]]
+    endif
     return [-1, []]
 endf
 
