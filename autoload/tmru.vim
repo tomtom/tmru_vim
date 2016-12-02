@@ -213,7 +213,7 @@ function! tmru#Leave() "{{{3
     for bufnr in range(1, bufnr('$'))
         if buflisted(bufnr)
             let bufname = fnamemodify(bufname(bufnr), ':p')
-            let [idx, item] = tmruobj.Find(bufname)
+            let [idx, item] = tmruobj.Find(bufname, filenames)
             if idx != -1
                 let item1 = s:SetSessions(item, 1)
                 let mru[idx] = item1
