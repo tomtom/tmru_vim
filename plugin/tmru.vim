@@ -2,8 +2,8 @@
 " @Author:      Tom Link (micathom AT gmail com?subject=vim-tlib-mru)
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2015-12-29.
-" @Revision:    1056
+" @Last Change: 2016-12-02.
+" @Revision:    1057
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -304,11 +304,15 @@ endf
 
 
 function! s:tmruobj_prototype.Find(filename, ...) dict
+    let filenames = a:0 >= 1 ? a:1 : self.GetFilenames()
     let filename = s:NormalizeFilename(a:filename)
-    let filenames = a:0 ? a:1 : self.GetFilenames()
-    let idx = index(filenames, filename)
+    if has('fname_case')
+        let idx = index(filenames, filename)
+    else
+        let idx = index(filenames, filename, 0, 1)
+    endif
     if idx !=# -1
-      return [idx, self.mru[idx]]
+        return [idx, self.mru[idx]]
     endif
     return [-1, []]
 endf
