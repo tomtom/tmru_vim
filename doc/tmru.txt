@@ -76,44 +76,21 @@ Contents~
         g:tmruSize ......................... |g:tmruSize|
         g:tmruExclude ...................... |g:tmruExclude|
         g:tmru_ignorecase .................. |g:tmru_ignorecase|
+        g:tmru_resolve_filenames ........... |g:tmru_resolve_filenames|
         g:tmru_check_disk .................. |g:tmru_check_disk|
-        TmruObj ............................ |TmruObj()|
-        TmruGetItem ........................ |TmruGetItem()|
-        TmruInsert ......................... |TmruInsert()|
         :Tmru .............................. |:Tmru|
         :Tmruedit .......................... |:Tmruedit|
         :Tmruload .......................... |:Tmruload|
         :Tmrusave .......................... |:Tmrusave|
         :Tmrusession ....................... |:Tmrusession|
-        g:tmru#set_filename_indicators ..... |g:tmru#set_filename_indicators|
         g:tmru#sessions_len ................ |g:tmru#sessions_len|
         g:tmru_select_filter ............... |g:tmru_select_filter|
         g:tmru#auto_remove_unreadable ...... |g:tmru#auto_remove_unreadable|
-        g:tmru#close_others ................ |g:tmru#close_others|
-        tmru#SelectMRU ..................... |tmru#SelectMRU()|
-        tmru#EditMRU ....................... |tmru#EditMRU()|
-        tmru#EditFiles ..................... |tmru#EditFiles()|
-        tmru#Session ....................... |tmru#Session()|
-        tmru#Leave ......................... |tmru#Leave()|
-        tmru#DisplayUnreadableFiles ........ |tmru#DisplayUnreadableFiles()|
         tmru#CheckFilenames ................ |tmru#CheckFilenames()|
-        tmru#RemoveItem .................... |tmru#RemoveItem()|
-        tmru#Drop .......................... |tmru#Drop()|
-        tmru#UnsetPersistent ............... |tmru#UnsetPersistent()|
-        tmru#TogglePersistent .............. |tmru#TogglePersistent()|
-        tmru#PreviousSession ............... |tmru#PreviousSession()|
-        tmru#SelectNamedSession ............ |tmru#SelectNamedSession()|
-        tmru#OpenNamedSession .............. |tmru#OpenNamedSession()|
-        tmru#SessionNames .................. |tmru#SessionNames()|
-        tmru#AddNamedSession ............... |tmru#AddNamedSession()|
-        tmru#RemoveNamedSession ............ |tmru#RemoveNamedSession()|
-        tmru#EditNamedSessions ............. |tmru#EditNamedSessions()|
-        tmru#SetFilenameIndicators ......... |tmru#SetFilenameIndicators()|
 
 
-========================================================================
-plugin/tmru.vim~
-
+------------------------------------------------------------------------
+                                                    *plugin/tmru.vim*
                                                     *g:tmruIgnoreServernamesRx*
 g:tmruIgnoreServernamesRx      (default: '^_LIKELYCOMPLETE_$')
     Don't load the tmru plugin for VIM servers (requires 
@@ -213,21 +190,16 @@ g:tmruExclude                  (default: '/te\?mp/\|vim.\{-}/\(doc\|cache\)/\|__
 g:tmru_ignorecase              (default: !has('fname_case'))
     If true, ignore case when comparing filenames.
 
+                                                    *g:tmru_resolve_filenames*
+g:tmru_resolve_filenames       (default: 1)
+    If true, resolve any links via |resolve()|.
+
                                                     *g:tmru_check_disk*
 g:tmru_check_disk              (default: 1)
     If TRUE, allow disk checks when adding files to the list by 
     means of a registered event (see |g:tmru_events|).
     This may cause annoying slow-downs in certain settings. In this 
     case, set this variable to 0 in your |vimrc| file.
-
-                                                    *TmruObj()*
-TmruObj(...)
-
-                                                    *TmruGetItem()*
-TmruGetItem(tmruobj, filename)
-
-                                                    *TmruInsert()*
-TmruInsert(tmruobj, oldpos, item)
 
                                                     *:Tmru*
 :Tmru
@@ -254,12 +226,8 @@ TmruInsert(tmruobj, oldpos, item)
     opened buffers / windows / tabs.
 
 
-========================================================================
-autoload/tmru.vim~
-
-                                                    *g:tmru#set_filename_indicators*
-g:tmru#set_filename_indicators (default: 1)
-
+------------------------------------------------------------------------
+                                                    *autoload/tmru.vim*
                                                     *g:tmru#sessions_len*
 g:tmru#sessions_len            (default: 3)
     Remember at most N sessions per file.
@@ -274,68 +242,11 @@ g:tmru#auto_remove_unreadable  (default: 1)
     If true, automatically remove unreadable files from the mru list, 
     when trying to edit them.
 
-                                                    *g:tmru#close_others*
-g:tmru#close_others            (default: 'bdelete')
-
-                                                    *tmru#SelectMRU()*
-tmru#SelectMRU()
-
-                                                    *tmru#EditMRU()*
-tmru#EditMRU()
-
-                                                    *tmru#EditFiles()*
-tmru#EditFiles(filenames, ...)
-
-                                                    *tmru#Session()*
-tmru#Session(session_no, mru, ...)
-
-                                                    *tmru#Leave()*
-tmru#Leave()
-
-                                                    *tmru#DisplayUnreadableFiles()*
-tmru#DisplayUnreadableFiles(mru)
-
                                                     *tmru#CheckFilenames()*
 tmru#CheckFilenames(world, selected)
     Validate list of filenames in mru list.
     This checks that files are readable and removes any (canonicalized)
     duplicates.
-
-                                                    *tmru#RemoveItem()*
-tmru#RemoveItem(world, selected)
-
-                                                    *tmru#Drop()*
-tmru#Drop(world, selected)
-
-                                                    *tmru#UnsetPersistent()*
-tmru#UnsetPersistent(world, selected)
-
-                                                    *tmru#TogglePersistent()*
-tmru#TogglePersistent(world, selected)
-
-                                                    *tmru#PreviousSession()*
-tmru#PreviousSession(world, selected)
-
-                                                    *tmru#SelectNamedSession()*
-tmru#SelectNamedSession(world, selected)
-
-                                                    *tmru#OpenNamedSession()*
-tmru#OpenNamedSession(world, selected)
-
-                                                    *tmru#SessionNames()*
-tmru#SessionNames(...)
-
-                                                    *tmru#AddNamedSession()*
-tmru#AddNamedSession(world, selected)
-
-                                                    *tmru#RemoveNamedSession()*
-tmru#RemoveNamedSession(world, selected)
-
-                                                    *tmru#EditNamedSessions()*
-tmru#EditNamedSessions(world, selected)
-
-                                                    *tmru#SetFilenameIndicators()*
-tmru#SetFilenameIndicators(world, mru)
 
 
 
