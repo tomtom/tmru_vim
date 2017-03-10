@@ -2,8 +2,8 @@
 " @Author:      Tom Link (micathom AT gmail com?subject=vim-tlib-mru)
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-12-02.
-" @Revision:    1057
+" @Last Change: 2016-12-09.
+" @Revision:    1067
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists("loaded_tmru")
@@ -191,12 +191,23 @@ if !exists("g:tmru_ignorecase")
 endif
 
 
+if !exists('g:tmru_resolve_filenames')
+    " If true, resolve any links via |resolve()|.
+    let g:tmru_resolve_filenames = 1   "{{{2
+endif
+
+
 if !exists('g:tmru_check_disk')
     " If TRUE, allow disk checks when adding files to the list by 
     " means of a registered event (see |g:tmru_events|).
     " This may cause annoying slow-downs in certain settings. In this 
     " case, set this variable to 0 in your |vimrc| file.
     let g:tmru_check_disk = 1   "{{{2
+endif
+
+
+if !exists('g:tmru_debug')
+    let g:tmru_debug = 0   "{{{2
 endif
 
 
@@ -306,10 +317,20 @@ endf
 function! s:tmruobj_prototype.Find(filename, ...) dict
     let filenames = a:0 >= 1 ? a:1 : self.GetFilenames()
     let filename = s:NormalizeFilename(a:filename)
-    if has('fname_case')
-        let idx = index(filenames, filename)
-    else
-        let idx = index(filenames, filename, 0, 1)
+    let idx = index(filenames, filename, 0, g:tmru_ignorecase)
+    if g:tmru_debug
+        let idxa = -1
+        let idxa_h = 0
+        for item in self.mru
+            if item[0] == filename
+                let idxa = idxa_h
+                break
+            endif
+            let idxa_h += 1
+        endfor
+        if idx != idxa
+            echom "Internal error: Inconsistent result for find for" a:filename ": idx=". idx "idxa=". idxa
+        endif
     endif
     if idx !=# -1
         return [idx, self.mru[idx]]
@@ -378,6 +399,9 @@ endf
 
 function! s:NormalizeFilename(filename) "{{{3
     let filename = fnamemodify(a:filename, ':p')
+    if g:tmru_resolve_filenames
+        let filename = resolve(filename)
+    endif
     if exists('+shellslash')
         if &shellslash
             let filename = substitute(filename, '\\', '/', 'g')
