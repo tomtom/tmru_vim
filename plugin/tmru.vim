@@ -2,18 +2,18 @@
 " @Author:      Tom Link (micathom AT gmail com?subject=vim-tlib-mru)
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2016-12-09.
-" @Revision:    1067
+" @Last Change: 2017-04-28.
+" @Revision:    1074
 " GetLatestVimScripts: 1864 1 tmru.vim
 
-if &cp || exists("loaded_tmru")
+if &cp || exists('g:loaded_tmru')
     finish
 endif
 if !exists('loaded_tlib') || loaded_tlib < 114
-    echoerr "tlib >= 1.14 is required"
+    echoerr 'tlib >= 1.14 is required'
     finish
 endif
-let loaded_tmru = 104
+let g:loaded_tmru = 104
 
 let s:save_cpo = &cpo
 set cpo&vim
@@ -26,19 +26,19 @@ if has('clientserver') && exists('v:servername')
         let g:tmruIgnoreServernamesRx = '^_LIKELYCOMPLETE_$'   "{{{2
     endif
     if v:servername =~ g:tmruIgnoreServernamesRx
-        let loaded_tmru = -1
+        let g:loaded_tmru = -1
         finish
     endif
 endif
 
 
-if !exists("g:tmruMenu")
+if !exists('g:tmruMenu')
     " The menu's prefix. If the value is "", the menu will be disabled.
     let g:tmruMenu = 'File.M&RU.' "{{{2
 endif
 
 
-if !exists("g:tmruMenuSize")
+if !exists('g:tmruMenuSize')
     " The number of recently edited files that are displayed in the 
     " menu.
     let g:tmruMenuSize = 20 "{{{2
@@ -93,7 +93,7 @@ if !exists('g:tmru_update_viminfo')
 endif
 
 
-if !exists("g:tmru_events")
+if !exists('g:tmru_events')
     " A dictionary of {EVENT: ACTION = BOOL, ...}, where ACTION is one 
     " of the following:
     "
@@ -144,7 +144,7 @@ if !exists('g:tmru_resolve_method')
 endif
 
 
-if !exists("g:tmru_file")
+if !exists('g:tmru_file')
     " Where to save the file list. The default value is only 
     " effective, if 'viminfo' doesn't contain '!' -- in which case 
     " the 'viminfo' will be used.
@@ -155,18 +155,18 @@ if !exists("g:tmru_file")
 endif
 
 
-if !exists("g:tmruSize")
+if !exists('g:tmruSize')
     " The number of recently edited files that are registered.
     " The size is smaller if viminfo is used (see |g:tmru_file|).
     let g:tmruSize = empty(g:tmru_file) ? 50 : 500 "{{{2
 endif
 
 
-if !exists("g:tmruExclude") "{{{2
+if !exists('g:tmruExclude') "{{{2
     if exists('+shellslash')
         let s:PS = &shellslash ? '/' : '\\'
     else
-        let s:PS = "/"
+        let s:PS = '/'
     endif
     " Ignore files matching this regexp.
     " This includes 'wildignore'.
@@ -185,7 +185,7 @@ if !exists("g:tmruExclude") "{{{2
 endif
 
 
-if !exists("g:tmru_ignorecase")
+if !exists('g:tmru_ignorecase')
     " If true, ignore case when comparing filenames.
     let g:tmru_ignorecase = !has('fname_case') "{{{2
 endif
@@ -230,14 +230,14 @@ function! s:tmruobj_prototype.MustLoad(...) dict
     if must_load && s:tmru_must_save
         let resolve = g:tmru_resolve_method
         if empty(resolve)
-            echom "TMRU: Another instance of VIM updated the mru list"
+            echom 'TMRU: Another instance of VIM updated the mru list'
             let resolvei = inputlist('Resolve synchronization conflict:', '1. Write', '2. read')
             let resolve = resolvei == 2 ? 'r' : 'w'
         endif
-        if g:tmru_resolve_method =~ '^w\%[rite]$'
+        if g:tmru_resolve_method =~# '^w\%[rite]$'
             let must_load = 0
             call self.Save()
-        elseif g:tmru_resolve_method =~ '^r\%[ead]$'
+        elseif g:tmru_resolve_method =~# '^r\%[ead]$'
             let s:tmru_must_save = 0
             " echom "DBG MustLoad tmru_must_save" s:tmru_must_save
         endif
@@ -250,13 +250,13 @@ endf
 function! s:tmruobj_prototype.Load() dict
     " TLogDBG "Load"
     if empty(g:tmru_file)
-        if exists("g:TMRU")
+        if exists('g:TMRU')
             if g:tmru_update_viminfo
                 " TLogVAR g:tmru_update_viminfo
                 rviminfo
             endif
         endif
-        if !exists("g:TMRU")
+        if !exists('g:TMRU')
             let g:TMRU = ''
         endif
         let s:tmru_list = map(split(g:TMRU, '\n'), '[v:val, {}]')
@@ -264,7 +264,7 @@ function! s:tmruobj_prototype.Load() dict
         " TLogVAR g:tmru_file
         if s:tmru_must_save
             echohl WarningMsg
-            echohl "TMRU: Internal error: Synchronization error (Please report)"
+            echohl 'TMRU: Internal error: Synchronization error (Please report)'
             echohl NONE
         endif
         let data = tlib#persistent#Get(g:tmru_file)
@@ -329,7 +329,7 @@ function! s:tmruobj_prototype.Find(filename, ...) dict
             let idxa_h += 1
         endfor
         if idx != idxa
-            echom "Internal error: Inconsistent result for find for" a:filename ": idx=". idx "idxa=". idxa
+            echom 'Internal error: Inconsistent result for find for' a:filename ': idx='. idx 'idxa='. idxa
         endif
     endif
     if idx !=# -1
@@ -424,10 +424,10 @@ function! s:HandleEvent(filename, event, props) "{{{3
         if get(a:props, 'register', 1) && s:last_auto_filename != a:filename
             " TLogVAR "Consider", a:filename
             if getbufvar(a:filename, '&buflisted') &&
-                        \ getbufvar(a:filename, '&buftype') !~ 'nofile' &&
+                        \ getbufvar(a:filename, '&buftype') !~# 'nofile' &&
                         \ (g:tmru_check_disk ?
                         \     (filereadable(a:filename) && !isdirectory(a:filename)) :
-                        \     fnamemodify(a:filename, ":t") != '')
+                        \     !empty(fnamemodify(a:filename, ':t')))
                 let s:last_auto_filename = a:filename
                 call s:MruRegister(tmruobj, a:filename, a:props)
             endif
@@ -449,8 +449,8 @@ endf
 function! s:MruRegister(tmruobj, filename, props)
     " TLogVAR a:filename, a:props
     let filename = s:NormalizeFilename(a:filename)
-    if g:tmruExclude != '' && filename =~ g:tmruExclude
-        if &verbose | echom "tmru: ignore file" filename | end
+    if !empty(g:tmruExclude) && filename =~# g:tmruExclude
+        if &verbose | echom 'tmru: ignore file' filename | end
         return
     endif
     if exists('b:tmruExclude') && b:tmruExclude
