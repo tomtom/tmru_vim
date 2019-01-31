@@ -7,9 +7,9 @@ once. The list of recently used files is synchronized across multiple
 instances of (g)vim running simultaneously.
 
 By default, tmru will remember 500 files (see |g:tmruSize|) accessible 
-via the :TRecentlyUsedFiles command. The list can be easily filtered. 
-Users can optionally use fuzzy patterns, which is not enabled by 
-default though (see |g:tlib#input#filter_mode|).
+via the `:Tmru` command. The list can be easily filtered. Users can 
+optionally use fuzzy patterns, which is not enabled by default though 
+(see |g:tlib#input#filter_mode|).
 
 Files can be grouped in sessions:
 
@@ -21,11 +21,11 @@ Files can be grouped in sessions:
 Files can be marked as "sticky" -- they will never be removed from the 
 list.
 
-:TRecentlyUsedFiles ... open one or more recently used file(s)
-:TRecentlyUsedFilesEdit ... edit the mru list
+`:Tmru` ... open one or more recently used file(s)
+`:Tmruedit` ... edit the mru list
 
 If viminfo contains "!", the data is stored as global variable. Otherwise,
-tlib#cache is used -- which saves the data in ${vimfiles}/cache/tmru/files
+tlib#cache is used -- which saves the data in `${vimfiles}/cache/tmru/files`
 by default.
 
 By default tmru matches the search pattern on the full filename. If 
@@ -35,7 +35,7 @@ file: >
     let g:tmru_world = {}
     let g:tmru_world.filter_format = 'fnamemodify(%%s, ":t")'
 
-If you want to retain the last filter between calls of :TRecentlyUsedFiles, you 
+If you want to retain the last filter between calls of `:Tmru`, you 
 could also add the following lines: >
 
     let g:tmru_world.cache_var = 'g:tmru_cache'
@@ -56,7 +56,7 @@ please make sure, you have the current version of vimball
 This script requires tlib (vimscript #1863) to be installed.
 
 Suggested maps (to be set in ~/.vimrc): >
-    noremap <m-r> :TRecentlyUsedFiles<cr>
+    noremap <m-r> :Tmru<cr>
 
 
 %s
