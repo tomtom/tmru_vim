@@ -2,8 +2,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2016-03-06.
-" @Revision:    340
+" @Last Change: 2018-11-26.
+" @Revision:    347
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -51,9 +51,9 @@ if !exists('g:tmru#world') "{{{2
                         \ ]
         endif
         call add(g:tmru#world.key_handlers,
-                    \ {'key': 16, 'agent': 'tmru#TogglePersistent',   'key_name': '<c-p>', 'submenu': 'Sticky', 'help': 'Toggle a file''s persistent mark'})
+                    \ {'key': 16, 'agent': 'tmru#TogglePersistent',   'key_name': '<c-p>', 'submenu': 'Persistent', 'help': 'Toggle a file''s persistent mark'})
         call add(g:tmru#world.key_handlers,
-                    \ {'key': 21, 'agent': 'tmru#UnsetPersistent',   'key_name': '<c-u>', 'submenu': 'Sticky', 'help': 'Unset a file''s persistent mark'})
+                    \ {'key': 21, 'agent': 'tmru#UnsetPersistent',   'key_name': '<c-u>', 'submenu': 'Persistent', 'help': 'Unset a file''s persistent mark'})
     endif
     if exists('g:tmru_world')
         let g:tmru#world = extend(g:tmru#world, g:tmru_world)
@@ -93,11 +93,11 @@ function! tmru#SelectMRU()
         if !empty(select_filter)
             let world.base = filter(world.base, select_filter)
         endif
-        let stickyn = len(filter(copy(tmruobj.mru), 'get(v:val[1], "sticky", 0)'))
-        if stickyn < len(tmruobj.mru)
-            let stickyn += 1
+        let persistentn = len(filter(copy(tmruobj.mru), 'get(v:val[1], ''persistent'', 0)'))
+        if persistentn < len(tmruobj.mru)
+            let persistentn += 1
         endif
-        let world.initial_index = stickyn
+        let world.initial_index = persistentn
         " TLogDBG "SelectMRU#4"
         let bs    = tlib#input#ListW(world)
         " TLogDBG "SelectMRU#5"
@@ -141,7 +141,12 @@ function! tmru#EditFiles(filenames, ...) "{{{3
             endif
         endfor
         if g:tmru#auto_remove_unreadable && !empty(remove_files)
-            return !s:RemoveItems(remove_files, tmruobj)
+            call inputsave()
+            let yn = input(len(remove_files) .' files were not readable. Remove them from the list? (Y/n)')
+            call inputrestore()
+            if yn !~ '\c^n'
+                return !s:RemoveItems(remove_files, tmruobj)
+            endif
         endif
     endif
     return 1
@@ -359,7 +364,7 @@ function! tmru#UnsetPersistent(world, selected) "{{{3
     let must_update = 0
     for filename in a:selected
         let [oldpos, item] = TmruGetItem(tmruobj, filename)
-        let item[1]['sticky'] = 0
+        let item[1]['persistent'] = 0
         let [must_update, tmruobj.mru] = TmruInsert(tmruobj, oldpos, item)
     endfor
     call tmruobj.Save({'must_update': must_update})
@@ -376,8 +381,8 @@ function! tmru#TogglePersistent(world, selected) "{{{3
     let must_update = 0
     for filename in a:selected
         let [oldpos, item] = TmruGetItem(tmruobj, filename)
-        let item[1]['sticky'] = !get(item[1], 'sticky', 0)
-        call add(msgs, printf('Mark %ssticky: %s', item[1]['sticky'] ? '' : 'not ', filename))
+        let item[1]['persistent'] = !get(item[1], 'persistent', 0)
+        call add(msgs, printf('Mark %spersistent: %s', item[1]['persistent'] ? '' : 'not ', filename))
         let [must_update, tmruobj.mru] = TmruInsert(tmruobj, oldpos, item)
         let fidx = tmruobj.FilenameIndex(filenames, filename)
         " TLogVAR filename, fidx
@@ -599,8 +604,8 @@ function! tmru#SetFilenameIndicators(world, mru) "{{{3
         for item in a:mru
             let [filename, props] = item
             let indicators = []
-            if get(props, 'sticky', 0)
-                call add(indicators, "s")
+            if get(props, 'persistent', 0)
+                call add(indicators, 'p')
             endif
             let sessions = get(props, 'sessions', []) + get(props, 'sessionnames', [])
             if !empty(sessions)

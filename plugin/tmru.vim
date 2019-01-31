@@ -2,8 +2,8 @@
 " @Author:      Tom Link (micathom AT gmail com?subject=vim-tlib-mru)
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2017-04-28.
-" @Revision:    1074
+" @Last Change: 2018-02-04.
+" @Revision:    1076
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists('g:loaded_tmru')
@@ -275,6 +275,16 @@ function! s:tmruobj_prototype.Load() dict
             let s:tmru_list = get(data, 'tmru', [])
         endif
     endif
+    for i in range(len(s:tmru_list))
+        let [filename, props] = s:tmru_list[i]
+        if has_key(props, 'sticky')
+            if !has_key(props, 'persistent')
+                let props.persistent = props.sticky
+            endif
+            call remove(props, 'sticky')
+            let s:tmru_list[i] = [filename, props]
+        endif
+    endfor
     let s:last_auto_filename = ''
     " echom "DBG Load tmru_must_save" s:tmru_must_save
     let s:tmru_must_save = 0
@@ -484,12 +494,12 @@ endf
 
 function! TmruInsert(tmruobj, oldpos, item) "{{{3
     " TLogVAR a:oldpos, a:item
-    " echom "DBG" get(a:item[1], "sticky", 0)
+    " echom "DBG" get(a:item[1], "persistent", 0)
     let newpos = 0
-    if !get(a:item[1], 'sticky', 0)
+    if !get(a:item[1], 'persistent', 0)
         for mruitem in a:tmruobj.mru
             " TLogVAR mruitem
-            if get(mruitem[1], 'sticky', 0)
+            if get(mruitem[1], 'persistent', 0)
                 let newpos += 1
             elseif mruitem[0] == a:item[0]
             else
