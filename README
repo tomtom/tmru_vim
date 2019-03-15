@@ -59,7 +59,7 @@ Suggested maps (to be set in ~/.vimrc): >
 
 
 Dependencies:
-  tlib (>= 1.14) :: http://github.com/tomtom/tlib_vim
+  tlib (>= 1.27) :: http://github.com/tomtom/tlib_vim
 
 License: GPLv3 or later
 
