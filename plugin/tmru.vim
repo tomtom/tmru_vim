@@ -2,15 +2,15 @@
 " @Author:      Tom Link (micathom AT gmail com?subject=vim-tlib-mru)
 " @Website:     http://www.vim.org/account/profile.php?user_id=4037
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
-" @Last Change: 2018-02-04.
-" @Revision:    1076
+" @Last Change: 2019-03-15.
+" @Revision:    1077
 " GetLatestVimScripts: 1864 1 tmru.vim
 
 if &cp || exists('g:loaded_tmru')
     finish
 endif
-if !exists('loaded_tlib') || loaded_tlib < 114
-    echoerr 'tlib >= 1.14 is required'
+if !exists('loaded_tlib') || loaded_tlib < 127
+    echoerr 'tlib >= 1.27 is required'
     finish
 endif
 let g:loaded_tmru = 104

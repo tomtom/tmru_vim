@@ -2,8 +2,8 @@
 " @Author:      Tom Link (mailto:micathom AT gmail com?subject=[vim])
 " @License:     GPL (see http://www.gnu.org/licenses/gpl.txt)
 " @Created:     2011-04-10.
-" @Last Change: 2018-11-26.
-" @Revision:    347
+" @Last Change: 2019-03-15.
+" @Revision:    348
 
 
 if !exists('g:tmru#set_filename_indicators')
@@ -33,7 +33,7 @@ if !exists('g:tmru#world') "{{{2
                 \ {'key': 19, 'agent': 'tlib#agent#EditFileInSplit',  'key_name': '<c-s>', 'help': 'Edit files (split)'},
                 \ {'key': 22, 'agent': 'tlib#agent#EditFileInVSplit', 'key_name': '<c-v>', 'help': 'Edit files (vertical split)'},
                 \ {'key': 20, 'agent': 'tlib#agent#EditFileInTab',    'key_name': '<c-t>', 'help': 'Edit files (new tab)'},
-                \ {'key': 23, 'agent': 'tlib#agent#ViewFile',         'key_name': '<c-w>', 'help': 'View file in window'},
+                \ {'key': 23, 'agent': 'tlib#agent#EditFileInWindow', 'key_name': '<c-w>', 'help': 'Edit file in the current window'},
                 \ ],
                 \ 'allow_suspend': 0,
                 \ 'query': 'Select file',
